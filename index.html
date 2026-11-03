@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ドバイへ行こう</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 帳簿の罫線紙に、紺インクと朱肉。ゴールだけ金。1列のスマホ縦レイアウト */
+:root{
+  --paper:#EBF0E8; --rule:#D3DDCF; --card:#F8FAF5; --ink:#1B2939; --mute:#5A6873;
+  --red:#B8282B; --gold:#9C731D; --green:#2C6A4E;
+  --s0:#DCE2D6; --s1:#CBDDD5; --s2:#D3D8EA; --s3:#E8DBC6; --s4:#EEDFA8;
+  --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);color:var(--ink);font-size:15px;line-height:1.7;
+  background:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px),var(--paper);}
+.wrap{max-width:560px;margin:0 auto;padding-block:16px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:8px}
+h1{font-family:var(--display);font-weight:800;font-size:30px;line-height:1.1;margin:0;letter-spacing:.02em}
+.kick{font-size:12px;letter-spacing:.12em;color:var(--mute);margin:0 0 4px}
+.ghost{font:inherit;font-size:13px;background:transparent;border:1px solid var(--ink);color:var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.intro{display:flex;flex-direction:column;gap:12px}
+.intro p{margin:0}
+.rules{background:var(--card);border:1px solid var(--rule);padding:12px 14px;font-size:14px}
+.rules ol{margin:0;padding-left:20px}
+h2{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.35;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:800;font-size:16px;margin:0}
+.pick{display:flex;flex-direction:column;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--ink);border-radius:2px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.opt b{font-family:var(--display);font-size:18px}
+.opt small{color:var(--mute);font-size:13px;line-height:1.6}
+.opt:hover:not(:disabled){background:#fff}
+.opt:disabled{opacity:.4;cursor:not-allowed;border-style:dashed}
+.rivalsIntro{font-size:13px;color:var(--mute)}
+.disc{font-size:12px;line-height:1.7;color:var(--mute);border-top:1px dashed var(--rule);padding-top:8px}
+.yearline{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:800;font-size:18px}
+.yearline span:last-child{font-family:var(--body);font-weight:400;font-size:13px;color:var(--mute)}
+.board{display:grid;grid-template-columns:repeat(17,1fr);gap:2px}
+.cell{aspect-ratio:1;max-width:100%;border-radius:2px;position:relative;display:flex;flex-wrap:wrap;align-content:flex-end;justify-content:center;gap:1px;padding:1px;font-size:9px;line-height:1}
+.cell.stop{outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.cell .lb{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:10px;color:var(--ink);opacity:.75}
+.s0{background:var(--s0)}.s1{background:var(--s1)}.s2{background:var(--s2)}.s3{background:var(--s3)}.s4{background:var(--s4)}
+.cell.goal{background:var(--gold)}.cell.goal .lb{color:var(--card);opacity:1}
+.tok{width:6px;height:6px;border-radius:50%;position:relative;z-index:1;border:1px solid var(--card)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.stats{background:var(--card);border:1px solid var(--rule);display:grid;grid-template-columns:1fr 1fr}
+.st{padding:8px 12px;border-bottom:1px solid var(--rule);min-width:0}
+.st:nth-child(odd){border-right:1px solid var(--rule)}
+.st .k{font-size:12px;color:var(--mute);letter-spacing:.06em}
+.st .v{font-family:var(--num);font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v.neg{color:var(--red)}
+.bar{height:6px;background:var(--rule);margin-top:6px;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.bar.h i{background:var(--green)}
+.meta{grid-column:1/-1;padding:8px 12px;font-size:13px;color:var(--mute);border-bottom:0}
+.card{background:var(--card);border:1.5px solid var(--ink);border-radius:2px;padding:16px;position:relative;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tag{font-size:12px;letter-spacing:.1em;color:var(--mute)}
+.card p{margin:0}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{font:inherit;text-align:left;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:2px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.choice small{color:var(--mute);font-size:12.5px;line-height:1.6}
+.choice:hover:not(:disabled){background:#fff}
+.choice:disabled{opacity:.4;cursor:not-allowed;border-style:dashed}
+.term{font:inherit;color:var(--ink);background:transparent;border:0;padding:0;border-bottom:1.5px dotted var(--red);cursor:pointer}
+.tm{border-bottom:1.5px dotted var(--red)}
+.result{border-left:3px solid var(--red);padding-left:10px;display:flex;flex-direction:column;gap:4px}
+.eff{font-family:var(--num);font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.ledger{border-top:1px solid var(--ink);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:14px;border-bottom:1px dashed var(--rule);padding:2px 0}
+.row span:last-child{font-family:var(--num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.long span:last-child{font-family:var(--body);white-space:normal;text-align:right;font-size:13px}
+.minus{color:var(--red)}
+.stamp{position:absolute;top:10px;right:10px;width:62px;height:62px;border:3px solid var(--red);border-radius:50%;color:var(--red);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:15px;transform:rotate(-14deg);opacity:.88;background:transparent;pointer-events:none;animation:press .35s ease-out}
+@keyframes press{from{transform:rotate(-14deg) scale(1.6);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.88}}
+.card.hasStamp h2{padding-right:64px}
+.primary{font-family:var(--display);font-weight:800;font-size:19px;background:var(--ink);color:var(--card);border:0;border-radius:2px;padding:14px;cursor:pointer;width:100%}
+.primary:disabled{opacity:.35;cursor:not-allowed}
+.dicebox{display:grid;place-items:center;padding:14px 0 4px;perspective:600px}
+.die{width:92px;height:92px;background:#FDFDFB;border:1.5px solid var(--ink);border-radius:18px;box-shadow:inset -6px -8px 0 rgba(27,41,57,.08),0 6px 14px rgba(27,41,57,.18);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:14px}
+.pip{width:17px;height:17px;border-radius:50%;background:var(--ink);place-self:center;box-shadow:inset 0 2px 2px rgba(0,0,0,.35)}
+.pip.big{width:32px;height:32px;background:var(--red)}
+.die.rolling{animation:tumble .32s linear infinite}
+.die.landed{animation:land .4s ease-out}
+@keyframes tumble{0%{transform:translateY(0) rotate3d(1,.6,.2,0deg)}50%{transform:translateY(-14px) rotate3d(1,.6,.2,180deg)}100%{transform:translateY(0) rotate3d(1,.6,.2,360deg)}}
+@keyframes land{0%{transform:scale(1.2) rotate(-18deg)}60%{transform:scale(.95) rotate(4deg)}100%{transform:none}}
+.diceno{text-align:center;font-family:var(--display);font-weight:800;font-size:18px;min-height:1.7em}
+.news{display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.news div{padding-left:10px;border-left:3px solid var(--rule)}
+.rivals{display:flex;flex-direction:column;gap:6px}
+.rv{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--rule);padding:8px 12px;font-size:13.5px}
+.rv .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.rv .nm{font-weight:700}
+.rv .num{margin-left:auto;font-family:var(--num);font-variant-numeric:tabular-nums;white-space:nowrap}
+details{background:var(--card);border:1px solid var(--rule);padding:8px 12px}
+summary{cursor:pointer;font-family:var(--display);font-weight:800}
+#log{margin:8px 0 0;padding-left:0;list-style:none;font-size:13px;display:flex;flex-direction:column;gap:6px}
+#log li{border-bottom:1px dashed var(--rule);padding-bottom:6px}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:baseline;background:var(--card);border:1px solid var(--rule);padding:10px 12px}
+.rk .no{font-family:var(--display);font-weight:800;font-size:20px}
+.rk .sc{font-family:var(--num);font-size:16px;font-variant-numeric:tabular-nums}
+.rk small{display:block;color:var(--mute)}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:72vh;overflow:auto;background:var(--card);border-top:2px solid var(--ink);z-index:20;
+  padding-block:14px calc(20px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-shadow:0 -8px 24px rgba(27,41,57,.18)}
+.sheet .in{max-width:560px;margin:0 auto}
+.sheet header{position:sticky;top:-14px;background:var(--card);padding-top:4px}
+.sheet dl{margin:8px 0 0}
+.sheet dt{font-family:var(--display);font-weight:800;margin-top:10px;padding:2px 4px}
+.sheet dd{margin:0;padding:0 4px;font-size:14px;color:var(--ink)}
+.sheet dt.hl,.sheet dd.hl{background:#F3E4B8}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none}.die{animation:none!important}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<div class="wrap" id="app">
+  <header>
+    <div><p class="kick">超リアル起業家人生ゲーム</p><h1>ドバイへ行こう</h1></div>
+    <button class="ghost" id="glossBtn" type="button">用語集</button>
+  </header>
+
+  <section id="start" class="intro">
+    <p>バイト、会社員、学生起業。どこから始めても、ゴールは50マス先のドバイ。途中には黒字倒産も、投資詐欺も、社員の横領も待っている。</p>
+    <div class="rules">
+      <ol>
+        <li>サイコロ1回が1年。毎年、決算で現金が動く</li>
+        <li>枠つきのマスは必ず止まる（設立・資金調達・EXIT・次の一手・ゴール）</li>
+        <li>現金がマイナスになったら資金ショート。二度倒産したら退場</li>
+        <li>点数は「純資産」「周りの幸せ」「信用」「上がり方（12通り）」で決まる</li>
+        <li>嫌になったら、途中で田舎に帰って降りることもできる</li>
+        <li>点線の言葉はタップすると解説が出る</li>
+      </ol>
+    </div>
+    <p class="disc">※これはゲームです。税金・融資・M&Aなどの制度や数字は実際をもとにしていますが、大きく簡略化しています。制度は変わることもあります。実際の判断は、税理士・金融機関・弁護士などの専門家に確認してください。登場する人物・会社は架空です。</p>
+    <h2>入り口を選ぶ</h2>
+    <div class="pick" id="origins"></div>
+    <p class="rivalsIntro">ライバル：<b>神崎</b>（学生起業でSaaS。攻めるタイプ）と<b>堅田</b>（会社員から運送。守るタイプ）</p>
+  </section>
+
+  <section id="game" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="yearline"><span id="yr"></span><span id="age"></span></div>
+    <div>
+      <div class="board" id="board"></div>
+      <div class="legend" id="legend" style="margin-top:6px"></div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="card" id="card"></div>
+    <button class="primary" id="rollBtn" type="button">サイコロを振る</button>
+    <div class="rivals" id="rivals"></div>
+    <details><summary>帳簿（これまでの記録）</summary><ol id="log"></ol></details>
+  </section>
+
+  <section id="end" hidden style="display:flex;flex-direction:column;gap:16px"></section>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="in">
+    <header><h3>用語集</h3><button class="ghost" id="closeSheet" type="button">閉じる</button></header>
+    <dl id="glist"></dl>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const R=()=>Math.random();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function yen(v){v=Math.round(v);const s=v<0?'-':'';const a=Math.abs(v);if(a>=10000)return s+(a/10000).toFixed(1).replace(/\.0$/,'')+'億円';return s+a.toLocaleString('ja-JP')+'万円'}
+const sy=v=>(v>=0?'+':'')+yen(v);
+const pct=v=>Math.round(v*100)+'%';
+
+const GL={
+'MLM':'マルチ・レベル・マーケティング（連鎖販売取引）。商品を売るより、下に会員を増やすことで儲かる仕組み。',
+'運行管理者':'トラック事業で、乗務の割り振り・点呼・過労防止などを管理する国家資格者。営業所ごとに選任が必須。',
+'緑ナンバー':'お金をもらって荷物を運ぶ事業用トラックのナンバー。一般貨物の許可は原則、車両5台以上から。',
+'連帯保証':'借りた本人と同じ責任を負う保証。「先に本人に請求して」とは言えない。名前だけの保証は存在しない。',
+'競業避止義務':'退職後、一定期間・一定範囲で元の会社と競合しない約束。範囲が広すぎると無効になることもある。',
+'残クレ':'残価設定型クレジット。数年後の下取り価格を据え置いて、月々を安く見せるローン。借金であることは同じ。',
+'手形':'決まった日に払うと約束した証券。受け取っても期日まで現金にならない。国は2026年度末までに約束手形の利用廃止を目指している。',
+'支払いサイト':'締め日から実際に入金されるまでの期間。売上が立っても、サイトが長いほど現金は遅れて入る。',
+'ベスティング':'株を一度に渡さず、在籍期間に応じて段階的に権利が確定する仕組み。途中で辞めた共同創業者に株が残るのを防ぐ。',
+'J-KISS':'シード期の簡易な資金調達契約。いったん新株予約権で受け取り、次の本格的な調達のときに株式へ転換される。',
+'PMF':'プロダクト・マーケット・フィット。作ったものが市場にハマり、勝手に売れ始める状態。',
+'ピボット':'事業の方向転換。顧客・商品・売り方のどこかを変えて、勝てる場所を探し直す。',
+'精算払い':'補助金は先に自分で全額払い、実績報告のあとで入金される。採択されても先に現金が要る。',
+'免税事業者':'資本金1,000万円未満の新設法人は、原則最初の2期は消費税を納めなくてよい。インボイス登録をすると対象外。',
+'倒産防止共済':'経営セーフティ共済。掛金は経費にでき、取引先が倒産したとき掛金の10倍まで無担保・無保証人で借りられる。',
+'税務調査':'税務署が帳簿や領収書を確認しに来ること。否認されると追徴課税に加算税・延滞税が乗る。',
+'経営者保証':'会社の借入に社長個人が連帯保証人になること。会社が潰れると個人の資産まで返済に充てられる。',
+'経営者保証ガイドライン':'法人と個人の資産が分かれているなどの要件を満たせば、経営者保証なしの融資を求められる指針。',
+'インボイス':'適格請求書。登録事業者が出した請求書でないと、取引先は消費税の控除を受けられない。',
+'創業融資':'日本政策金融公庫などが行う、実績のない創業者向けの融資。事業計画書と自己資金の額が見られる。',
+'VC':'ベンチャーキャピタル。将来の上場や売却で何倍にもなることを狙ってスタートアップに出資する投資会社。',
+'バリュエーション':'会社の値段。出資を受けるときは、プレマネー（出資前の評価額）で持株の割合が決まる。',
+'希薄化':'新しく株を発行すると、元からいる株主の持株比率が下がること。ダイリューション。',
+'優先株':'普通株より先に配当や売却代金を受け取れる株。VCが持つことが多く、売却時には先に投資額を回収される。',
+'ストックオプション':'将来、決まった値段で自社株を買える権利。会社の価値が上がるほど、もらった社員の利益になる。',
+'キーマン':'その人が抜けると事業が回らなくなる人物。M&Aでは残留を売買の条件にすることもある。',
+'ローンチ':'新サービスや新商品を世に出すこと。',
+'バーンレート':'毎月、会社から出ていく現金の額。お金が燃えていく速さ。',
+'ランウェイ':'今の現金で、バーンレートに何ヶ月耐えられるか。滑走路の残り。',
+'ブリッジ':'次の大きな資金調達までをつなぐための、小さな追加調達。',
+'粉飾決算':'利益や資産を実際より良く見せる決算。銀行をだませば融資契約違反になる。',
+'期限の利益喪失':'分割で返していい権利を失うこと。契約違反などで、残りの借金を一括で返せと言われる。',
+'是正勧告':'労働基準監督署が、法律違反を直すよう指導する文書。未払い残業代はさかのぼって払うことになる。',
+'CVC':'コーポレート・ベンチャーキャピタル。事業会社が自社とのシナジーを狙って出資する投資部門。',
+'PMI':'買収後の統合作業。制度・システム・社風を一つにする。M&Aの成否はここで決まると言われる。',
+'ダウンラウンド':'前回より低い評価額での資金調達。既存株主の持株の価値が下がる。',
+'特定技能':'人手不足の分野で外国人が働ける在留資格。自動車運送業も対象に加わった。',
+'デューデリジェンス':'買い手が売り手の会社を隅々まで調べること。財務・法務・労務の地雷はここで見つかる。',
+'表明保証':'売り手が「決算書は正しい」「隠れた借金はない」などを保証すること。違反があれば買い手に補償する。',
+'レーマン方式':'M&A仲介の成功報酬の計算方法。取引金額が大きいほど料率が下がる。5億円までの部分は5%が一般的。',
+'譲渡益課税':'株を売った利益にかかる税金。原則20.315%（所得税15%・復興特別所得税0.315%・住民税5%）。',
+'アーンアウト':'売却代金の一部を、売却後の業績目標の達成を条件に後払いする方式。売り手は数年会社に残ることが多い。',
+'IPO':'株式を証券取引所に上場すること。創業者は持株の一部を市場で売れるようになる。',
+'主幹事':'IPOを中心になって引き受ける証券会社。上場までの審査や準備に伴走する。',
+'監査法人':'決算書が正しいかをチェックする会社。上場には原則、直前2期分の監査が必要。',
+'ロックアップ':'上場後の一定期間、創業者や大株主が株を売らない約束。',
+'MBO':'マネジメント・バイアウト。経営陣が会社を買い取ること。後継者問題の解決策にもなる。',
+'ホールディングス':'持株会社。複数の会社の株を持って束ねる親会社。事業ごとに会社を分けてリスクを切り離せる。',
+'CFC税制':'外国子会社合算税制。税率の低い国に作った会社の所得を、日本側の所得に合算して課税する。',
+'ポンジ・スキーム':'新しい出資者のお金を、前の出資者への「配当」に回す詐欺。最初は本当に配当が来るのが特徴。',
+'ゴールデンビザ':'UAEの長期居住ビザ。200万ディルハム以上の不動産購入などで取得できる。',
+'国外転出時課税':'1億円以上の株などを持つ人が日本を出るとき、売っていなくても含み益に所得税をかける制度。いわゆる出国税。',
+'183日ルール':'「年の半分以上海外にいれば日本の非居住者」とよく言われる目安。実際は生活の本拠がどこかで判断される。',
+'オフプラン':'完成前の物件を図面の段階で買う投資。完成時の値上がりを狙うが、遅延や頓挫のリスクがある。',
+'フリーゾーン':'ドバイなどにある経済特区。外資100%で会社を作れる。',
+'リスケ':'リスケジュール。銀行に返済の猶予や減額を頼むこと。その間、新しい融資は受けにくくなる。',
+'つなぎ融資':'入金までの資金不足を埋める短期の借入。',
+'黒字倒産':'帳簿上は利益が出ているのに、手元の現金が足りず支払いができなくなって潰れること。',
+'ファクタリング':'売掛金を専門業者に売って、入金日より前に現金化すること。手数料は高め。',
+'デットファイナンス':'借入で資金を集めること。株を渡さない代わりに返済の義務がある。株を渡して集めるのはエクイティファイナンス。',
+'リファラル':'社員や知人の紹介で採用すること。',
+'小規模企業共済':'小さな会社の役員や個人事業主のための退職金制度。掛金は全額が所得控除になる。',
+'簡易課税':'基準となる年の売上が5,000万円以下なら選べる消費税の計算方法。業種ごとの「みなし仕入率」で納税額を出す。',
+'役員報酬':'社長の給料。原則、期首から3ヶ月以内に決めた額を毎月同じ額で払わないと経費にならない（定期同額給与）。',
+'黒ナンバー':'軽自動車でお金をもらって荷物を運ぶときのナンバー。届出だけで始められる。',
+'新NISA':'投資で得た利益が非課税になる制度。2024年から枠が広がり、非課税の期間も無期限になった。',
+'内部統制':'不正やミスを防ぐ社内の仕組み。承認のルール、ダブルチェック、担当の分離など。',
+'カーブアウト':'会社の一部の事業を切り出して、売ったり別会社にしたりすること。',
+'社労士':'社会保険労務士。就業規則、労務管理、社会保険の手続きの専門家。',
+'事業譲渡':'会社ごとではなく、事業の一部だけを売り買いすること。',
+'企業出版':'費用を著者側が出して本を作る出版。会社のブランディングが目的。',
+'商業出版':'出版社が費用を出し、売れると見込んだ本を出す出版。著者は印税をもらう側。',
+'修正申告':'申告した税額が少なかったと気づいて、正しく申告し直すこと。調査で指摘される前に出せば加算税が軽くなる。',
+'REIT':'不動産投資信託。少額で、複数の不動産にまとめて投資できる上場商品。',
+'株式投資型クラウドファンディング':'ネット上で多くの個人から、株と引き換えに出資を集める仕組み。',
+'納税猶予':'出国税は、手続きをして担保を出せば、納税を最長10年まで待ってもらえる。',
+'納税管理人':'海外に住む人の代わりに、日本の税金の申告や納付をする人。',
+'VARA':'ドバイの仮想資産規制庁。ドバイで暗号資産の事業をするには、ここのライセンスが必要。',
+'M&A仲介':'会社の売り手と買い手を引き合わせる業者。成功報酬で稼ぐ。'
+};
+const rich=s=>s.replace(/〔(.+?)〕/g,(_,k)=>`<button type="button" class="term" data-k="${k}">${k}</button>`);
+const lab=s=>s.replace(/〔(.+?)〕/g,'<span class="tm">$1</span>');
+const plain=s=>s.replace(/〔|〕/g,'');
+
+const ORIG={
+ baito:{n:'バイトから',d:'元手50万円。失うものは何もない。毎年の貯金は少なめ',cash:50,credit:30,happy:55,salary:60,start:0,age:22},
+ kaisha:{n:'会社員から',d:'元手300万円。信用と貯金はあるが、安定を捨てる勇気がいる',cash:300,credit:55,happy:45,salary:150,start:0,age:24},
+ gakusei:{n:'学生起業',d:'元手10万円。信用はゼロに近いが、下積みを飛ばして5マス先から',cash:10,credit:20,happy:60,salary:20,start:5,age:20}
+};
+const IND={
+ unso:{n:'運送',d:'〔緑ナンバー〕は車両5台から。〔運行管理者〕も必要。利益は堅いが薄い',base:300,g:90,vol:.3,mult:5,init:1500},
+ inshoku:{n:'飲食',d:'内装と保証金で初期費用が重い。当たれば早いが、ブレも大きい',base:250,g:100,vol:.7,mult:4,init:1200},
+ apparel:{n:'アパレル',d:'在庫が現金を食う。ブランドが立てば化ける',base:200,g:110,vol:.8,mult:4.5,init:800},
+ saas:{n:'SaaS',d:'最初は赤字を掘る。売上が積み上がれば評価倍率は桁違い',base:-400,g:350,vol:.5,mult:8,init:300}
+};
+const STOPS={10:'found',22:'raise',34:'exit',42:'next',50:'goal'};
+const STOPLB={10:'設',22:'調',34:'出',42:'次',50:'ドバ'};
+const STG=[{n:'下積み'},{n:'創業'},{n:'グロース'},{n:'EXIT・多角経営'},{n:'ドバイ準備'}];
+const stg=pos=>pos<10?0:pos<22?1:pos<34?2:pos<42?3:4;
+
+function mk(name,orig,cpu,risk,color,plan){const o=ORIG[orig];return{name,cpu,risk,color,plan,orig,pos:o.start,cash:o.cash,debt:0,credit:o.credit,happy:o.happy,salary:o.salary,ind:null,years:0,scale:1,floorVal:0,equity:1,exited:false,exitType:null,side:0,companies:0,bankrupt:0,flags:{},lic:{},pending:[],used:new Set(),media:0,angelCount:0,angelWins:0,serial:0,heir:0,farm:0,done:false,dead:false,lastProfit:0,note:''}}
+function expP(p){if(!p.ind||p.exited)return 0;const I=IND[p.ind];return (I.base+I.g*p.years)*p.scale}
+function val(p){if(!p.ind||p.exited)return 0;return Math.max(p.floorVal,Math.round(expP(p)*IND[p.ind].mult))}
+function nw(p){return Math.round(p.cash-p.debt+val(p)*p.equity+p.side*3)}
+
+function m(p,d){const out=[];
+ if(d.cash){d.cash=Math.round(d.cash);p.cash+=d.cash;out.push('現金 '+sy(d.cash))}
+ if(d.debt){d.debt=Math.round(d.debt);p.debt=Math.max(0,p.debt+d.debt);out.push('借入 '+sy(d.debt))}
+ if(d.credit){p.credit=clamp(p.credit+d.credit,0,100);out.push('信用 '+(d.credit>0?'+':'')+d.credit)}
+ if(d.happy){p.happy=clamp(p.happy+d.happy,0,100);out.push('周りの幸せ '+(d.happy>0?'+':'')+d.happy)}
+ if(d.scale){p.scale*=d.scale;out.push('事業規模 ×'+d.scale)}
+ if(d.equity){const b=p.equity;p.equity*=d.equity;out.push('持株 '+pct(b)+'→'+pct(p.equity))}
+ if(d.side){p.side=Math.max(0,p.side+d.side);out.push('副収入 '+sy(d.side)+'/年')}
+ if(d.companies){p.companies+=d.companies;out.push('保有会社 +'+d.companies)}
+ if(d.salary){p.salary=Math.max(0,p.salary+d.salary);out.push('毎年の貯金 '+sy(d.salary))}
+ if(d.media){p.media+=d.media;out.push('知名度 +'+d.media)}
+ if(d.floor){d.floor=Math.round(d.floor);p.floorVal=Math.max(0,p.floorVal+d.floor);out.push('企業価値の下支え '+sy(d.floor))}
+ return out.join('　')}
+const o=(t,p,d)=>({t,e:m(p,d||{})});
+const later=(p,n,f)=>p.pending.push({n,f});
+
+/* ---------- イベント ---------- */
+const FARM={k:'farm',l:'全部やめて田舎に帰る',sub:'ここでゲームを降りる（農家上がり）',f:p=>{let g=0;if(p.ind&&!p.exited){g=Math.round(Math.max(0,val(p)-p.debt)*p.equity*.3);p.debt=0}p.farm=1;return o('会社は'+(g?'二束三文で人に譲り':'たたみ')+'、地元で畑を借りた。朝が静かだ。',p,{cash:g,happy:20})}};
+function ang(p,cost,n,prob,win,loseTxt,loseCash){p.angelCount++;later(p,n,q=>{if(R()<prob){q.angelWins++;return o('投資先がEXIT。何倍にもなって返ってきた。',q,{cash:win})}return o(loseTxt,q,{cash:loseCash||0})});return o('投資した。投資先はこれで'+p.angelCount+'社目。',p,{cash:-cost})}
+function hojoF(p,prob,fee){if(R()<prob){later(p,1,q=>o('実績報告が通り、補助金が入金された。',q,{cash:800}));return o('採択。先に設備投資1,200万円を自腹で払った。入金は1年後。',p,{cash:-1200-fee,scale:1.25})}return o('不採択。申請の費用だけ消えた。',p,{cash:-fee})}
+const shzTax=p=>Math.max(150,Math.round(Math.abs(expP(p))*.4));
+
+const EV=[
+/* ===== 下積み ===== */
+{s:0,id:'shikaku',t:'資格を取るか',d:'独立に向けて、資格の勉強をするか。何を取るかで、後の効き方が変わる。',ch:[
+ {l:'簿記2級',sub:'決算書が読める。起業時の融資や税務調査で効く',f:p=>{p.lic.boki=1;return o('合格。損益計算書と貸借対照表が「読める」ようになった。銀行の目が少し変わる。',p,{cash:-15,credit:8,happy:-2})}},
+ {l:'運行管理者',sub:'運送で起業するなら、管理者を雇わずに済む',f:p=>{p.lic.unkan=1;return o('合格。運送会社を作るとき、自分が〔運行管理者〕になれる。',p,{cash:-10,credit:3,happy:-2})}},
+ {l:'宅建',sub:'不動産投資で、利回りを盛った物件をつかまされにくい',f:p=>{p.lic.takken=1;return o('合格。不動産屋の言う「利回り」の裏が読めるようになった。',p,{cash:-20,credit:4,happy:-2})}},
+ {l:'取らずに遊ぶ',f:p=>o('楽しかった。何も残らなかった。',p,{happy:5})}]},
+{s:0,id:'shouzai',t:'情報商材',d:'SNSに「月収100万円ロードマップ」の広告。今なら39万8千円が19万8千円。',ch:[
+ {l:'買う',r:1,f:p=>o('中身はネットで無料で読める内容だった。返金窓口はつながらない。',p,{cash:-20,happy:-3})},
+ {l:'無料の説明会だけ行く',f:p=>o('最後に高額コースを売られた。売り方の勉強にだけはなった。',p,{credit:1,happy:-1})},
+ {l:'スルーする',f:p=>o('正解。本当に稼げる方法は、売られていない。',p,{credit:2})}]},
+{s:0,id:'kouryu',t:'異業種交流会',d:'先輩に誘われて異業種交流会へ。「名刺は100枚持ってこい」と言われた。',ch:[
+ {l:'行く',r:1,f:p=>R()<.5?o('後の取引先になる社長と知り合った。',p,{credit:8}):o('途中から健康食品の話が始まった。〔MLM〕だった。',p,{happy:-5,cash:-10})},
+ {l:'自分で小さな勉強会を開く',f:p=>o('主催する側に回ると、人の方から寄ってくる。',p,{cash:-5,credit:5,happy:2})},
+ {l:'行かない',f:p=>o('家で寝た。',p,{happy:2})}]},
+{s:0,id:'bonus',t:'決算賞与',d:'会社の業績が良く、決算賞与が出た。',ch:[
+ {l:'全額貯金する',f:p=>o('元手が増えた。',p,{cash:p.salary})},
+ {l:'半分を親に渡す',f:p=>o('照れくさかったが、渡してよかった。',p,{cash:Math.round(p.salary/2),happy:6})},
+ {l:'半分を本とセミナーに使う',f:p=>o('知らなかったことが一つずつ減っていく。',p,{cash:Math.round(p.salary/2),credit:4})}]},
+{s:0,id:'tokei',t:'時計の誘惑',d:'初めてまとまった貯金ができた。前から欲しかった時計がある。',ch:[
+ {l:'新品で買う',f:p=>o('気分は上がる。商談で時計を見られることも、実際にある。',p,{cash:-150,happy:10})},
+ {l:'状態のいい中古を探す',f:p=>o('半額以下で手に入った。目利きも商売のうち。',p,{cash:-60,happy:6})},
+ {l:'買わずに貯める',f:p=>o('元手が増えた。',p,{credit:3})}]},
+{s:0,id:'hoshou',t:'保証人の頼み',d:'親戚から「店の融資の保証人になってくれ。名前だけでいいから」。',ch:[
+ {l:'引き受ける',r:1,f:p=>{later(p,3,q=>o('親戚の店が閉店。〔連帯保証〕人として残りの借金を請求された。',q,{cash:-400,happy:-5}));return o('とても感謝された。',p,{happy:5})}},
+ {l:'保証はできないが、少しなら貸す',f:p=>o('返ってこない前提で渡した。関係は壊れなかった。',p,{cash:-50,happy:2})},
+ {l:'断る',f:p=>o('気まずくなった。でも〔連帯保証〕に「名前だけ」はない。',p,{happy:-6,credit:3})}]},
+{s:0,id:'hikinuki',t:'ついていきたい',d:'担当している取引先の社長から「独立するなら、うちの仕事はあなたに頼みたい」と言われた。',c:p=>p.orig==='kaisha',ch:[
+ {l:'黙って受ける',r:1,f:p=>{p.flags.customer=1;later(p,4,q=>o('元の会社から内容証明が届いた。〔競業避止義務〕違反で和解金を払った。',q,{cash:-200,credit:-5}));return o('独立したら初年度から売上が立ちそうだ。元の会社から見れば、顧客を奪われた形になる。',p,{credit:-3})}},
+ {l:'元の会社に話を通してから受ける',f:p=>{if(R()<.5){p.flags.customer=1;return o('社長が「客がそう言うなら仕方ない」と了解してくれた。円満に引き継げる。',p,{credit:5})}return o('了解は出なかった。今回は諦めた。',p,{credit:3})}},
+ {l:'断る',f:p=>o('円満に送り出してもらえそうだ。',p,{credit:6})}]},
+{s:0,id:'fukugyou',t:'週末の副業',d:'週末に副業をするか。',ch:[
+ {l:'せどりやWebライターで稼ぐ',f:p=>o('年80万円。売上を自分で作る感覚が分かった。',p,{cash:80,happy:-4})},
+ {l:'起業したい事業を小さく試す',f:p=>{p.flags.test=1;return o('売上は年30万円。でも、客が本当にお金を払うかを確かめられた。',p,{cash:30,credit:3,happy:-3})}},
+ {l:'やらない',f:p=>o('休みは休む。',p,{happy:3})}]},
+{s:0,id:'car',t:'車をどうするか',d:'ディーラーで新車を勧められた。〔残クレ〕なら月々2万円台。',ch:[
+ {l:'新車を買う',r:1,f:p=>o('借金は信用情報にそのまま載る。創業融資の審査で効いてくる。',p,{debt:250,happy:6,credit:-5})},
+ {l:'軽バンを現金で買い、週末に配達で稼ぐ',f:p=>{later(p,1,q=>o('〔黒ナンバー〕で週末だけ走った。車代は1年で取り返した。',q,{cash:150}));return o('軽バンを買った。',p,{cash:-120,happy:-2})}},
+ {l:'買わない',f:p=>o('電車で十分。',p,{credit:2})}]},
+{s:0,id:'master',t:'行きつけの店',d:'行きつけの店のマスターに言われた。「商売は、現金がすべてだよ」',ch:[
+ {l:'笑って聞き流す',f:p=>o('この言葉の意味は、数年後に分かる。',p,{happy:3})},
+ {l:'どういう意味か聞く',f:p=>o('売掛、在庫、借金の返済。利益と現金がずれる話を1時間聞いた。',p,{credit:5})},
+ {l:'店の帳簿を見せてもらう',f:p=>o('小さな店の帳簿は、どんな教科書より分かりやすかった。',p,{credit:6,cash:-10})}]},
+{s:0,id:'tenshoku',t:'転職の誘い',d:'勢いのあるベンチャーから、今より年収100万円高い条件で誘われた。',ch:[
+ {l:'移る',f:p=>o('貯金のペースが上がった。忙しさも上がった。',p,{salary:40,happy:-3})},
+ {l:'起業したい業界に飛び込む（年収は下がる）',f:p=>{p.flags.insider=1;return o('給料は下がった。でも、業界の裏側と儲かる仕組みが見えた。',p,{salary:-20,credit:4})}},
+ {l:'今の職場に残る',f:p=>o('信頼を積み上げる。',p,{credit:3})}]},
+{s:0,id:'partner',t:'一緒にやろう',d:'同期に「一緒に起業しないか」と誘われた。',ch:[
+ {l:'乗る',r:1,f:p=>{p.flags.partner=1;return o('二人なら、できることが倍になる。揉めたときの決め方は、まだ決めていない。',p,{happy:5})}},
+ {l:'副業で一緒に試してから決める',f:p=>o('試してみて、相性も役割分担も見えた。',p,{cash:20,credit:2})},
+ {l:'断る',f:p=>o('一人でやると決めた。',p,{})}]},
+{s:0,id:'cf',t:'アイデアを試す',d:'温めているアイデアを、クラウドファンディングで試してみるか。',ch:[
+ {l:'出してみる',r:1,f:p=>R()<.5?o('支援が集まった。ニーズの証明になった。',p,{cash:150,credit:4}):o('目標額に届かず不成立。全額集まらないとゼロの方式だった。',p,{happy:-4})},
+ {l:'SNSで先に反応を見る',f:p=>o('反応は薄かった。出す前に分かってよかった。',p,{credit:2})},
+ {l:'出さない',f:p=>o('アイデアは頭の中に置いておく。',p,{})}]},
+{s:0,id:'shogaku',t:'奨学金の返済',d:'学生時代の奨学金の返済が、まだ残っている。',ch:[
+ {l:'繰り上げて返す',f:p=>o('身軽になった。',p,{cash:-150,credit:5})},
+ {l:'毎月のペースで返す',f:p=>o('淡々と返す。',p,{cash:-30})},
+ {l:'返還の猶予を申請する',f:p=>o('手元の現金は残る。返す総額は変わらない。',p,{happy:2})}]},
+{s:0,id:'shugyou',t:'修行の誘い',d:'夜の街で知り合った社長に「うちで修行しないか」と言われた。',ch:[
+ {l:'行く（給料は下がる）',r:1,f:p=>{p.flags.insider=1;return o('社長の判断を毎日そばで見た。給料以上のものをもらった。',p,{salary:-30,credit:6})}},
+ {l:'たまに飲みに連れて行ってもらう',f:p=>o('飲みの席で、本には書いていない話をたくさん聞いた。',p,{cash:-30,credit:3,happy:3})},
+ {l:'断る',f:p=>o('夜の付き合いは、ほどほどにする。',p,{})}]},
+{s:0,id:'nisa',t:'積立投資',d:'同僚に〔新NISA〕での積立投資を勧められた。',ch:[
+ {l:'毎月コツコツ積み立てる',f:p=>{later(p,3,q=>o('積立がじわじわ増えていた。',q,{cash:250}));return o('毎月、自動で積み立てる。',p,{cash:-180})}},
+ {l:'全額を個別株に突っ込む',r:1,f:p=>R()<.45?o('当たった。たまたまだと自分で分かっている。',p,{cash:200}):o('買った翌月に決算が悪くて暴落した。',p,{cash:-150,happy:-3})},
+ {l:'やらない。元手は事業のために置く',f:p=>o('現金のまま持っておく。',p,{})}]},
+{s:0,id:'kariru',t:'友人の頼み',d:'友人に「30万円貸してほしい」と頼まれた。',ch:[
+ {l:'貸す',r:1,f:p=>R()<.4?o('ちゃんと返ってきた。',p,{happy:3}):o('返ってこなかった。友人とも疎遠になった。',p,{cash:-30,happy:-4})},
+ {l:'お金ではなく、仕事を紹介する',f:p=>o('友人はその仕事で立ち直った。',p,{happy:4,credit:2})},
+ {l:'断る',f:p=>o('お金の貸し借りはしない。',p,{happy:-2})}]},
+{s:0,id:'kaere',t:'帰ってこい',d:'地元の親から「そろそろ帰ってこないか」と電話。',ch:[
+ {l:'東京で続ける',f:p=>o('まだやることがある。',p,{credit:2})},
+ {l:'帰省して、地元の商売を見て回る',f:p=>o('地元にも、まだ誰もやっていない商売があった。',p,{cash:-20,happy:5})},
+ FARM]},
+
+/* ===== 創業 ===== */
+{s:1,id:'site',t:'大口案件',d:'大手から大口の案件。ただし支払いは〔手形〕で、〔支払いサイト〕は120日。',ch:[
+ {l:'受ける',r:1,f:p=>{later(p,2,q=>o('手形の期日が来た。やっと現金になった。',q,{cash:750}));return o('売上は立った。でも、先に出ていくお金は今払う。',p,{cash:-450,credit:4})}},
+ {l:'受けて、ファクタリングで早めに現金化する',f:p=>{later(p,1,q=>o('売掛金を〔ファクタリング〕業者に売って、早めに現金にした。手数料は1割取られた。',q,{cash:675}));return o('受けた。',p,{cash:-450,credit:2})}},
+ {l:'断る',f:p=>o('売上は伸びない。現金も減らない。',p,{happy:-3})}]},
+{s:1,id:'vest',t:'共同創業者の株',d:'共同創業者に株を30%渡すことにした。〔ベスティング〕を付けるか。',ch:[
+ {l:'付ける',f:p=>o('弁護士費用は痛い。でも正しい。',p,{cash:-50,credit:3})},
+ {l:'株は渡さず、給料を高くする',f:p=>o('株は守れた。共同創業者は少し不満そうだ。',p,{cash:-150,happy:-3})},
+ {l:'付けない',r:1,f:p=>{later(p,3,q=>o('共同創業者が辞めた。株30%を持ったまま。',q,{equity:.7,happy:-8}));return o('「信頼してるから」で決めた。',p,{happy:4})}}]},
+{s:1,id:'jkiss',t:'エンジェルからの申し出',d:'個人投資家が「〔J-KISS〕で500万円入れたい」と言ってきた。',ch:[
+ {l:'受ける',r:1,f:p=>{p.flags.jkiss=1;return o('現金が増えた。次の調達で株に変わる。〔希薄化〕はそのとき来る。',p,{cash:500})}},
+ {l:'株ではなく借入にしてもらう',f:p=>o('〔デットファイナンス〕にした。株は自分のまま、返済が増えた。',p,{cash:500,debt:500})},
+ {l:'断る',f:p=>o('株は全部自分のまま。',p,{})}]},
+{s:1,id:'pivot',t:'手応えがない',d:'半年やって〔PMF〕の手応えがない。',ch:[
+ {l:'ピボットする',r:1,f:p=>R()<.5?o('〔ピボット〕が刺さった。顧客の反応が変わった。',p,{scale:1.4}):o('迷走した。作り直しの費用だけが残った。',p,{scale:.85,cash:-200})},
+ {l:'今いる客に深くヒアリングする',f:p=>o('答えは客が持っていた。',p,{cash:-30,scale:1.15})},
+ {l:'今のまま続ける',f:p=>o('少しずつ改善した。',p,{scale:1.05})}]},
+{s:1,id:'hojo',t:'補助金の公募',d:'設備投資の補助金。上限800万円。ただし〔精算払い〕。',ch:[
+ {l:'自分で申請する',r:1,f:p=>hojoF(p,.4+p.credit/300,80)},
+ {l:'認定支援機関の税理士と組んで申請する',f:p=>hojoF(p,.8,150)},
+ {l:'申請しない',f:p=>o('書類地獄を回避した。',p,{happy:2})}]},
+{s:1,id:'shz',t:'消費税の納付',d:'設立3期目。〔免税事業者〕の期間が終わり、消費税の請求が来た。',c:p=>p.years>=2,ch:[
+ {l:'一括で払う',f:p=>o('預かっていた消費税を、運転資金に使ってしまっていた。痛い。',p,{cash:-shzTax(p)})},
+ {l:'税務署に分割納付を相談する',f:p=>{const t=shzTax(p);later(p,1,q=>o('消費税の分割の残りを払った。',q,{cash:-Math.round(t*.55)}));return o('分割を認めてもらった。',p,{cash:-Math.round(t*.5),credit:-2})}},
+ {l:'払えないので放置する',r:1,f:p=>{const t=shzTax(p);later(p,1,q=>o('延滞税と督促の末、口座を差し押さえられた。',q,{cash:-Math.round(t*1.3),credit:-10}));return o('見なかったことにした。',p,{})}}]},
+{s:1,id:'hire',t:'初めての正社員',d:'初めての正社員採用。求人広告は100万円。',ch:[
+ {l:'広告を出す',f:p=>o('良い人が来た。会社が会社らしくなった。',p,{cash:-100,happy:6,scale:1.1})},
+ {l:'知り合いの紹介で採る',f:p=>o('〔リファラル〕で来た人は、辞めにくい。',p,{cash:-20,happy:4,scale:1.05})},
+ {l:'自分で全部やる',f:p=>o('社長が一番働く。体はきつい。',p,{happy:-6})}]},
+{s:1,id:'fx',t:'経営者仲間の誘い',d:'経営者仲間から「年利36%保証のFX自動売買ファンド。社長仲間だけの枠がある」。',ch:[
+ {l:'1,000万円入れる',r:1,f:p=>{later(p,1,q=>o('配当が振り込まれた。紹介者は「追加枠もある」と言う。',q,{cash:300}));later(p,2,q=>o('運用会社と連絡がつかない。〔ポンジ・スキーム〕だった。元本は戻らない。',q,{happy:-12,credit:-5}));return o('入金した。',p,{cash:-1000})}},
+ {l:'100万円だけ様子見で入れる',f:p=>{later(p,1,q=>o('少額の配当が来た。',q,{cash:30}));later(p,2,q=>o('これも〔ポンジ・スキーム〕だった。少額で済んだのが救い。',q,{happy:-3}));return o('少しだけ入れた。',p,{cash:-100})}},
+ {l:'断る',f:p=>o('「保証」と「36%」が並んだ時点で、答えは出ている。',p,{credit:3})}]},
+{s:1,id:'kyosai',t:'税理士の勧め',d:'顧問税理士に〔倒産防止共済〕を勧められた。',ch:[
+ {l:'入る',f:p=>{p.flags.kyosai=1;return o('掛金は経費になる。お守りが一つ増えた。',p,{cash:-120})}},
+ {l:'小規模企業共済にも入る',f:p=>{p.flags.kyosai=1;later(p,6,q=>o('〔小規模企業共済〕の積み立てが育っていた。社長の退職金だ。',q,{cash:500}));return o('会社のお守りと、社長の退職金。',p,{cash:-240,credit:2})}},
+ {l:'入らない',f:p=>o('今は現金を残す。',p,{})}]},
+{s:1,id:'rensa',t:'取引先の倒産',d:'主要な取引先が倒産。売掛金500万円が回収できなくなった。',ch:[
+ {l:'穴を埋める',f:p=>p.flags.kyosai?o('〔倒産防止共済〕から無担保で借りて、連鎖倒産をまぬがれた。',p,{debt:500}):o('穴は自分の現金で埋めるしかない。',p,{cash:-500,credit:-4})},
+ {l:'債権者集会に出て、少しでも回収する',f:p=>{later(p,2,q=>o('配当として売掛金の2割が戻った。',q,{cash:100}));return o('損は確定。少しでも取り返しに行く。',p,{cash:-500})}},
+ {l:'取引先の事業の引き継ぎを申し出る',r:1,f:p=>R()<.5?o('取引先の顧客と従業員を引き継げた。',p,{cash:-500,scale:1.2,happy:3}):o('管財人に相手にされなかった。',p,{cash:-500,happy:-3})}]},
+{s:1,id:'zei',t:'税理士選び',d:'記帳代行なら月1万円、顧問税理士なら月5万円。',ch:[
+ {l:'安い方',r:1,f:p=>{later(p,3,q=>q.lic.boki?o('〔税務調査〕が来た。自分で帳簿を見ていたので、指摘は少なかった。',q,{cash:-100}):o('〔税務調査〕が来た。経費の否認で追徴課税。',q,{cash:-300,credit:-3}));return o('浮いたお金は大きい。',p,{cash:-12})}},
+ {l:'会計ソフトで自分で記帳し、決算だけ頼む',f:p=>{if(!p.lic.boki)later(p,3,q=>o('〔税務調査〕で記帳のミスを指摘された。',q,{cash:-150}));return o(p.lic.boki?'簿記の知識が活きた。安くて正確。':'安く済んだ。帳簿の正しさは自分次第。',p,{cash:-25,credit:p.lic.boki?5:1})}},
+ {l:'顧問税理士',f:p=>o('節税の相談も、銀行向けの資料もそろうようになった。',p,{cash:-60,credit:5})}]},
+{s:1,id:'proper',t:'銀行からの提案',d:'メインバンクから2,000万円の融資の提案。条件は〔経営者保証〕。',ch:[
+ {l:'保証して借りる',r:1,f:p=>{p.flags.guarantee=1;return o('現金に余裕ができた。会社が潰れたら、個人も道連れになる。',p,{cash:2000,debt:2000,scale:1.1})}},
+ {l:'経営者保証ガイドラインで交渉する',f:p=>p.credit>=55?o('〔経営者保証ガイドライン〕を盾に交渉し、保証なしで通った。帳簿をきれいにしてきた成果だ。',p,{cash:2000,debt:2000,scale:1.1}):o('「今回は見送りで」。信用がまだ足りない。',p,{})},
+ {l:'借りない',f:p=>o('無借金を貫く。',p,{happy:2})}]},
+{s:1,id:'office',t:'事務所選び',d:'どこに拠点を構えるか。',ch:[
+ {l:'渋谷のシェアオフィス',f:p=>o('採用で効く。家賃も効く。',p,{cash:-200,happy:6,credit:2})},
+ {l:'郊外の倉庫兼事務所',f:p=>o('安くて広い。人は呼びにくい。',p,{cash:-50})},
+ {l:'自宅で始める',f:p=>o('固定費はゼロ。取引先を呼べない。',p,{happy:-3,credit:-2})}]},
+{s:1,id:'invoice',t:'値引きの要求',d:'取引先から「〔インボイス〕に登録していないなら、消費税分を値引きして」。',ch:[
+ {l:'登録する',f:p=>o('免税の特典は消えた。取引は続く。',p,{cash:-80,credit:3})},
+ {l:'簡易課税を選んで登録する',f:p=>o('〔簡易課税〕で計算が楽になり、納税額も抑えられた。',p,{cash:-50,credit:3})},
+ {l:'登録しない',r:1,f:p=>o('一部の取引先が離れた。',p,{scale:.9})}]},
+{s:1,id:'tairitsu',t:'方針の対立',d:'共同創業者が「もっと攻めたい」と言い、方針がぶつかった。',ch:[
+ {l:'相手に任せる',r:1,f:p=>o('一気に攻めた。社内はバタバタだ。',p,{scale:1.2,happy:-4})},
+ {l:'自分の方針を通す',f:p=>o('堅実にいく。相手の目は冷めた。',p,{happy:-6,credit:2})},
+ {l:'株を買い取って、円満に別れる',f:p=>{const b=p.equity;p.equity=Math.min(1,p.equity*1.15);return{t:'400万円で株を買い戻した。これで意思決定は一人でできる。',e:m(p,{cash:-400})+'　持株 '+pct(b)+'→'+pct(p.equity)}}}]},
+{s:1,id:'kouza',t:'大手との取引口座',d:'大手と取引するには、取引口座の開設（与信審査）が必要。決算書はまだ1期分しかない。',ch:[
+ {l:'代理店を間に入れる',f:p=>o('マージンは抜かれるが、大手の仕事が回ってきた。',p,{scale:1.1,cash:-50})},
+ {l:'直接、何度も通う',r:1,f:p=>R()<.5?o('担当者が根負けして、口座が開いた。',p,{scale:1.25,credit:4}):o('「3期分の決算書が出てから」と言われた。',p,{happy:-3})},
+ {l:'今は諦める',f:p=>o('中小の取引先を固める。',p,{})}]},
+{s:1,id:'nesage',t:'値下げ要求',d:'売上の3割を占める取引先から、1割の値下げ要求。',ch:[
+ {l:'のむ',f:p=>o('取引は続く。利益は削れた。',p,{scale:.9})},
+ {l:'サービスを削って価格を合わせる',f:p=>o('値段は下げた。手間も下げた。',p,{happy:-2,scale:.97})},
+ {l:'断る',r:1,f:p=>R()<.5?o('切られた。',p,{scale:.75}):o('「なら今のままで」。値下げは通らなかった。',p,{credit:4})}]},
+{s:1,id:'tsukare1',t:'夜中の天井',d:'売上は立たない、社員は辞める。夜中に天井を見ている。',c:p=>p.happy<40,ch:[
+ {l:'1週間休む',f:p=>o('戻ったら、少し景色が違って見えた。',p,{cash:-50,happy:10})},
+ {l:'踏ん張る',f:p=>o('歯を食いしばった。',p,{credit:3,happy:-5})},
+ FARM]},
+{s:1,id:'mentor',t:'先輩経営者',d:'先輩経営者が「月に1回なら話を聞くよ」と言ってくれた。',ch:[
+ {l:'お願いする',f:p=>o('答えはくれない。でも、問いの立て方を教えてくれた。',p,{credit:4,happy:4})},
+ {l:'お金を払ってプロのコンサルを雇う',f:p=>o('仕組みが一つずつ整った。',p,{cash:-120,scale:1.1})},
+ {l:'断る',f:p=>o('自分で考える。',p,{})}]},
+{s:1,id:'koukoku',t:'広告代理店',d:'広告代理店が「月50万円で売上3倍にします」と言う。',ch:[
+ {l:'1年契約する',r:1,f:p=>R()<.3?o('本当に当たった。',p,{cash:-600,scale:1.4}):o('問い合わせは少し増えた。600万円分ではなかった。',p,{cash:-600,happy:-2})},
+ {l:'SNSを自分で運用する',f:p=>o('伸びは遅い。でも、お金は出ていかない。',p,{happy:-3,scale:1.08})},
+ {l:'断る',f:p=>o('紹介で回る商売を続ける。',p,{})}]},
+{s:1,id:'ginkou',t:'口座が開かない',d:'バーチャルオフィスの住所で登記したら、銀行で法人口座が開けない。',ch:[
+ {l:'実際の事務所を借りる',f:p=>o('口座が開いた。銀行の見る目も変わった。',p,{cash:-150,credit:3})},
+ {l:'別の銀行を回る',f:p=>o('3行目で、ようやく開いた。',p,{happy:-3})},
+ {l:'ネット銀行で開く',f:p=>o('開いた。融資の相談先にはならない。',p,{credit:-2})}]},
+{s:1,id:'houshu',t:'自分の給料',d:'社長の〔役員報酬〕をいくらにするか。期の途中では変えられない。',ch:[
+ {l:'高めにする',r:1,f:p=>o('生活は楽になった。会社の現金は減った。',p,{cash:-200,happy:5})},
+ {l:'低めにする',f:p=>o('会社に現金を残した。',p,{cash:100,happy:-3})},
+ {l:'ゼロにする',f:p=>o('会社のために全部置いた。銀行には「社長の生活は大丈夫か」と聞かれた。',p,{cash:200,happy:-6,credit:-2})}]},
+{s:1,id:'claim',t:'重大なクレーム',d:'大口の顧客から重大なクレーム。原因は自社のミス。',ch:[
+ {l:'社長が自ら謝りに行く',f:p=>o('かえって信頼された。',p,{cash:-50,credit:5,happy:2})},
+ {l:'補償を多めに出す',f:p=>o('お金で誠意を示した。取引は増えた。',p,{cash:-200,credit:6,scale:1.05})},
+ {l:'担当者に任せる',r:1,f:p=>o('取引を減らされた。',p,{scale:.9})}]},
+{s:1,id:'shinkin',t:'信用金庫の担当者',d:'信用金庫の担当者が、毎週顔を出してくれる。',ch:[
+ {l:'定期積金を組む',f:p=>o('付き合いは数字で示す。',p,{cash:-60,credit:6})},
+ {l:'毎月、試算表を見せる',f:p=>o('「この会社は数字を見ている」と覚えてもらった。',p,{credit:8,happy:-2})},
+ {l:'適当にあしらう',f:p=>o('いざというとき、頼れる相手が一人減った。',p,{credit:-2})}]},
+
+/* ===== グロース ===== */
+{s:2,id:'ouryou',t:'社員の横領',d:'経理担当が3年かけて1,200万円を着服していた。',ch:[
+ {l:'刑事告訴する',f:p=>o('回収できたのは一部。',p,{cash:-800,credit:4,happy:-4})},
+ {l:'内部統制を作り直し、公表もする',f:p=>o('〔内部統制〕を一から作った。公表したことで、逆に取引先から信頼された。',p,{cash:-1000,credit:8,happy:-2})},
+ {l:'示談で済ませる',r:1,f:p=>o('分割で返すと言った。続くかは分からない。社内の空気は重い。',p,{cash:-1000,happy:-6})}]},
+{s:2,id:'keyman',t:'エースの引き抜き',d:'〔キーマン〕の営業部長に、競合から年収1.5倍のオファー。',ch:[
+ {l:'ストックオプションを出す',f:p=>o('〔ストックオプション〕で残ってくれた。会社の未来を一緒に背負う人が増えた。',p,{equity:.95,happy:6})},
+ {l:'年収を競合に合わせる',f:p=>o('残ってくれた。他の社員との差が気になる。',p,{cash:-300,happy:2})},
+ {l:'引き止めない',r:1,f:p=>o('取引先ごと持っていかれた。',p,{scale:.85,happy:-4})}]},
+{s:2,id:'launch',t:'大型ローンチ',d:'新サービスの大型〔ローンチ〕。広告費は1,500万円。',ch:[
+ {l:'全力で打つ',r:1,f:p=>R()<.5?o('刺さった。問い合わせが止まらない。',p,{cash:-1500,scale:1.5}):o('爆死。ローンチ当日のアクセスは、ほぼ社員だった。',p,{cash:-1500,happy:-5})},
+ {l:'半年延期して作り込む',f:p=>o('出遅れたが、完成度は上がった。',p,{cash:-200,scale:1.15,happy:-2})},
+ {l:'小さく出して様子を見る',f:p=>o('じわじわ伸びた。',p,{cash:-300,scale:1.1})}]},
+{s:2,id:'burn',t:'滑走路が短い',d:'〔バーンレート〕が上がり、〔ランウェイ〕は残り8ヶ月。',ch:[
+ {l:'コストカット',f:p=>o('外注と広告を止めた。社内は暗くなった。',p,{cash:600,happy:-10})},
+ {l:'赤字の事業を切り出して売る',f:p=>o('〔カーブアウト〕で一部の事業を売った。身軽になった。',p,{cash:900,scale:.85})},
+ {l:'ブリッジで追加調達',r:1,f:p=>o('〔ブリッジ〕で時間を買った。代わりに株を手放した。',p,{cash:1500,equity:.9})}]},
+{s:2,id:'funsoku',t:'決算書のお化粧',d:'今期は赤字。自称コンサルが「少しお化粧すれば銀行は貸してくれる」と言う。',ch:[
+ {l:'化粧する',r:1,f:p=>{p.flags.funsoku=1;if(R()<.5)later(p,3,q=>{const d=q.debt;q.debt=0;q.cash-=d;return{t:'銀行に〔粉飾決算〕が発覚。〔期限の利益喪失〕で、残りの借金を一括で返せと言われた。',e:'一括返済 '+sy(-d)+'　'+m(q,{credit:-30})}});return o('融資は通った。',p,{credit:8,cash:500,debt:500})}},
+ {l:'税理士と改善計画を作って銀行に出す',f:p=>o('赤字の理由と、立て直しの道筋を数字で示した。',p,{cash:-50,credit:4})},
+ {l:'正直にそのまま出す',f:p=>o('赤字でも、正直な決算書が一番強い。',p,{credit:-3})}]},
+{s:2,id:'media',t:'取材依頼',d:'経済番組から取材の依頼が来た。',ch:[
+ {l:'社長が出る',f:p=>o('放送翌日から、採用の応募と問い合わせが急増した。',p,{floor:Math.round(val(p)*.25),happy:3,media:1})},
+ {l:'社員を前に出す',f:p=>o('出演した社員が誇らしそうだった。',p,{floor:Math.round(val(p)*.15),happy:8})},
+ {l:'断る',f:p=>o('目立たない方が、やりやすいこともある。',p,{})}]},
+{s:2,id:'roudou',t:'労基署',d:'元社員が労基署に駆け込んだ。未払い残業代の〔是正勧告〕。',ch:[
+ {l:'全額払う',f:p=>o('痛い。でも残った社員の目が変わった。',p,{cash:-400,happy:8})},
+ {l:'社労士を入れて就業規則から作り直す',f:p=>o('〔社労士〕と仕組みから直した。同じことはもう起きない。',p,{cash:-500,happy:10,credit:3})},
+ {l:'争う',r:1,f:p=>{later(p,2,q=>o('労働審判で負けた。付加金まで乗った。',q,{cash:-700}));return o('弁護士を立てた。',p,{cash:-100,happy:-10})}}]},
+{s:2,id:'cvc',t:'大手からの出資',d:'大手の〔CVC〕から、業務提携付きの出資の打診。',ch:[
+ {l:'受ける',f:p=>{p.flags.cvc=1;return o('現金と販路が手に入った。',p,{cash:2000,equity:.85,scale:1.15})}},
+ {l:'出資は断り、業務提携だけ結ぶ',f:p=>o('株は守り、販路だけ借りた。',p,{scale:1.08})},
+ {l:'断る',f:p=>o('独立を守った。',p,{})}]},
+{s:2,id:'enjou',t:'炎上',d:'アルバイトの悪ふざけ動画が拡散。トレンド入りした。',ch:[
+ {l:'すぐ謝罪する',f:p=>o('傷は浅く済んだ。',p,{credit:3,floor:-Math.round(val(p)*.1)})},
+ {l:'社長がSNSで経緯を全部説明する',r:1,f:p=>R()<.5?o('誠実な説明が、逆に話題になった。',p,{credit:6,media:1}):o('言い訳と受け取られた。',p,{scale:.9,credit:-2})},
+ {l:'様子を見る',r:1,f:p=>o('沈黙が火に油を注いだ。',p,{scale:.8,happy:-5,credit:-4})}]},
+{s:2,id:'ma',t:'同業から身売りの相談',d:'後継者のいない同業から「会社を買ってくれないか」。2,000万円。',ch:[
+ {l:'会社ごと買う',r:1,f:p=>{const sh=Math.max(0,2000-p.cash);return o('〔PMI〕は地獄だった。でも売上は一気に乗った。'+(sh?'足りない分は借りた。':''),p,{cash:-2000+sh,debt:sh,scale:1.35,happy:-5})}},
+ {l:'欲しい事業だけ買う',f:p=>o('〔事業譲渡〕で、顧客と設備だけ引き継いだ。',p,{cash:-800,scale:1.15})},
+ {l:'見送る',f:p=>o('身の丈を守った。',p,{})}]},
+{s:2,id:'shayou',t:'社用車',d:'社長の車を買い替える。',ch:[
+ {l:'高級車を経費で落とす',r:1,f:p=>{later(p,3,q=>o('〔税務調査〕で私的利用を指摘され、否認された。',q,{cash:-250,credit:-3}));return o('気分は社長。',p,{happy:3,cash:-300})}},
+ {l:'国産の商用車にする',f:p=>o('取引先の駐車場で浮かない。',p,{cash:-150,credit:2})},
+ {l:'高級車を自腹で買う',f:p=>o('筋は通した。',p,{credit:2,cash:-300,happy:3})}]},
+{s:2,id:'down',t:'市況の悪化',d:'市況が冷え込んだ。追加で調達すると〔ダウンラウンド〕になる。',c:p=>p.flags.vc,ch:[
+ {l:'受け入れて調達する',f:p=>o('評価額が下がり、持株も削られた。',p,{cash:800,floor:-Math.round(p.floorVal*.4),equity:.85})},
+ {l:'調達をやめて黒字化を急ぐ',f:p=>o('成長は止まった。会社は締まった。',p,{happy:-8,scale:.9})},
+ {l:'既存の株主にブリッジを頼む',f:p=>o('小さく〔ブリッジ〕でつないだ。',p,{cash:800,equity:.95})}]},
+{s:2,id:'seriesb',t:'シリーズB',d:'既存のVCが、シリーズBのリードを提案してきた。',c:p=>p.flags.vc,ch:[
+ {l:'そのまま調達する',r:1,f:p=>o('一気にアクセルを踏む。',p,{cash:3000,equity:.8,scale:1.4,floor:3000})},
+ {l:'他のVCと条件を比べる',f:p=>o('時間はかかったが、条件は良くなった。',p,{cash:3000,equity:.85,scale:1.35,floor:3000,happy:-2})},
+ {l:'断る',f:p=>o('今の持株を守る。',p,{})}]},
+{s:2,id:'gaikoku',t:'人手不足',d:'人手が足りない。〔特定技能〕の外国人採用を検討する。',ch:[
+ {l:'採用して生活まで支える',f:p=>o('住まいも手続きも面倒を見た。よく働いてくれる。',p,{cash:-200,scale:1.15,happy:4})},
+ {l:'人を増やさず、自動化に投資する',f:p=>o('システムに置き換えた。',p,{cash:-500,scale:1.1})},
+ {l:'採用しない',f:p=>o('受注を断る日が増えた。',p,{scale:.95})}]},
+{s:2,id:'book',t:'本を出しませんか',d:'出版社から「社長の本を出しませんか」。ただし〔企業出版〕で、費用は会社持ち。',ch:[
+ {l:'お金を出して出す',f:p=>o('本が出た。名刺代わりになった。',p,{cash:-500,media:1,credit:3})},
+ {l:'商業出版を狙って企画書を書く',r:1,f:p=>R()<.4?o('〔商業出版〕が決まった。印税も入る。',p,{media:2,cash:50}):o('どこの出版社にも通らなかった。',p,{happy:-2})},
+ {l:'断る',f:p=>o('本より、仕事で語る。',p,{})}]},
+{s:2,id:'tsukare2',t:'誰のための会社か',d:'社員の顔と名前が一致しなくなった。誰のための会社か、分からなくなってきた。',c:p=>p.happy<40,ch:[
+ {l:'幹部に権限を渡す',f:p=>o('任せたら、意外と回った。',p,{happy:8,scale:.95})},
+ {l:'自分が全部見る',f:p=>o('目は届く。体がもたない。',p,{happy:-5,scale:1.05})},
+ FARM]},
+{s:2,id:'leak',t:'情報漏えい',d:'サーバーが不正アクセスを受け、顧客情報が漏れた可能性がある。',ch:[
+ {l:'すぐに公表する',f:p=>o('批判はされた。でも隠さなかったことは評価された。',p,{cash:-300,credit:3})},
+ {l:'外部の専門家に調べさせてから公表する',f:p=>o('調査結果と対策をセットで出した。',p,{cash:-500,credit:6})},
+ {l:'調査が終わるまで伏せる',r:1,f:p=>{if(R()<.5)later(p,1,q=>o('隠していたことが報道された。',q,{credit:-15,scale:.85}));return o('まだ誰も気づいていない。',p,{})}}]},
+{s:2,id:'youtube',t:'社長の発信',d:'「社長のYouTubeをやりませんか」と制作会社に誘われた。',ch:[
+ {l:'社長として発信する',r:1,f:p=>R()<.4?o('再生数が伸びた。取引先からも見ていると言われる。',p,{cash:-100,media:1,scale:1.1}):o('再生数は伸びなかった。',p,{cash:-100,happy:-3})},
+ {l:'社員の働き方を発信する（採用目的）',f:p=>o('応募が増えた。',p,{cash:-60,happy:4,scale:1.05})},
+ {l:'やらない',f:p=>o('本業に集中する。',p,{})}]},
+{s:2,id:'ookuchi',t:'大口の噂',d:'売上の3割を占める大口の取引先に、倒産の噂が出た。',ch:[
+ {l:'取引を減らす',f:p=>o('売上は落ちた。リスクも落ちた。',p,{scale:.9,credit:2})},
+ {l:'前金払いに条件を変えてもらう',f:p=>R()<.5?o('のんでくれた。',p,{credit:2}):o('「なら他に頼む」と言われた。',p,{scale:.85})},
+ {l:'そのまま続ける',r:1,f:p=>R()<.4?o('噂は本当だった。売掛金が焦げついた。',p,{cash:-800}):o('ただの噂だった。',p,{})}]},
+{s:2,id:'shoken',t:'証券会社の営業',d:'証券会社が「IPOを目指しませんか」と営業に来た。',ch:[
+ {l:'上場の準備を始める',f:p=>{p.flags.ipoprep=1;return o('管理部門を強くし始めた。上場審査に向けて一歩前進。',p,{cash:-300,credit:5})}},
+ {l:'監査法人の簡易調査だけ受ける',f:p=>o('〔監査法人〕に、上場までに直すべき点を一覧で出してもらった。',p,{cash:-100,credit:2})},
+ {l:'断る',f:p=>o('上場は考えていない。',p,{})}]},
+{s:2,id:'nakama',t:'初期メンバーの不満',d:'初期メンバーが「最近入った人の方が給料が高い」と不満を言っている。',ch:[
+ {l:'給与テーブルを作る',f:p=>o('ルールで決めるようになった。',p,{cash:-200,happy:8})},
+ {l:'初期メンバーにストックオプションを出す',f:p=>o('初期メンバーに〔ストックオプション〕を配った。',p,{equity:.97,happy:10})},
+ {l:'我慢してもらう',f:p=>o('一人、辞めた。',p,{happy:-8})}]},
+{s:2,id:'kaigai',t:'海外展開の話',d:'台湾の商社から、現地展開の話が来た。',ch:[
+ {l:'現地に出る',r:1,f:p=>R()<.5?o('当たった。売上の柱が一本増えた。',p,{cash:-1000,scale:1.3}):o('現地のパートナーと揉めて撤退した。',p,{cash:-1500,happy:-4})},
+ {l:'まず越境ECで試す',f:p=>o('小さく売れた。',p,{cash:-200,scale:1.08})},
+ {l:'断る',f:p=>o('国内で勝ち切る。',p,{})}]},
+{s:2,id:'chousa',t:'税務調査の通知',d:'〔税務調査〕の事前通知が来た。',ch:[
+ {l:'顧問税理士と準備する',f:p=>o('指摘はわずかで済んだ。',p,{cash:-80,credit:3})},
+ {l:'先に修正申告を出す',f:p=>o('〔修正申告〕で先に直した。加算税は軽く済んだ。',p,{cash:-200,credit:4})},
+ {l:'自分で対応する',r:1,f:p=>R()<.5?o('何も出なかった。',p,{}):o('解釈の違いで、まとめて否認された。',p,{cash:-400})}]},
+{s:2,id:'award',t:'経営者表彰',d:'地域の経営者表彰にノミネートされた。',ch:[
+ {l:'社長として受ける',f:p=>o('地元紙に載った。',p,{media:1,credit:4,happy:3})},
+ {l:'受賞を採用ページに載せる',f:p=>o('応募者の質が上がった。',p,{happy:5,scale:1.05})},
+ {l:'辞退する',f:p=>o('賞のために経営しているわけではない。',p,{})}]},
+
+/* ===== EXIT後・多角経営 ===== */
+{s:3,id:'angel',t:'若手からの相談',d:'若い起業家に、エンジェル投資を頼まれた。500万円。',ch:[
+ {l:'500万円出す',r:1,f:p=>ang(p,500,3,.15,5000,'その会社は解散した。授業料。')},
+ {l:'100万円だけ出して、メンターになる',f:p=>ang(p,100,3,.2,1500,'その会社は解散した。教えたことは、本人に残った。')},
+ {l:'出さない',f:p=>o('財布の紐は固い。',p,{})}]},
+{s:3,id:'mikoukai',t:'一本の電話',d:'「上場確実の未公開株があります。社長だけにご案内しています」',ch:[
+ {l:'買う',r:1,f:p=>o('上場の予定などなかった。典型的な未公開株詐欺。',p,{cash:-1000,happy:-8})},
+ {l:'消費生活センターに通報する',f:p=>o('同じ電話を受けた人が何人もいた。',p,{credit:3,happy:2})},
+ {l:'切る',f:p=>o('ガチャ切り。',p,{credit:2})}]},
+{s:3,id:'fudo',t:'一棟マンション',d:'銀行から一棟マンション投資の提案。頭金1,500万円、残りはローン。',ch:[
+ {l:'買う',r:1,f:p=>p.lic.takken?o('宅建の知識で、利回りを盛った物件を避けて選べた。ローン返済後の家賃が毎年残る。',p,{cash:-1500,side:350}):o('ローン返済後の家賃が毎年残る。',p,{cash:-1500,side:250})},
+ {l:'REITで小さく持つ',f:p=>o('〔REIT〕で、手間なく分配金を受け取る。',p,{cash:-500,side:30})},
+ {l:'見送る',f:p=>o('本業で勝負する。',p,{})}]},
+{s:3,id:'cfc',t:'海外の資産管理会社',d:'自称資産コンサルが「シンガポールに資産管理会社を作れば、税金はゼロ」と言う。',ch:[
+ {l:'乗る',r:1,f:p=>{later(p,3,q=>o('〔CFC税制〕で日本側に合算課税された。追徴と延滞税。',q,{cash:-1500,credit:-5}));return o('設立費用を払った。',p,{cash:-300})}},
+ {l:'国際税務に強い税理士に相談する',f:p=>o('「それは使えません」と、根拠付きで止められた。',p,{cash:-100,credit:4})},
+ {l:'断る',f:p=>o('うまい話には乗らない。',p,{credit:3})}]},
+{s:3,id:'motoshain',t:'元社員の独立',d:'元社員が独立し、顧客を連れて競合を始めた。',ch:[
+ {l:'訴える',r:1,f:p=>o('勝っても負けても、誰も得しなかった。',p,{cash:-300,happy:-5})},
+ {l:'業務提携を持ちかける',f:p=>o('競合が、外注先になった。',p,{side:100,happy:4})},
+ {l:'応援する',f:p=>o('数年後、その会社から仕事が回ってくるようになった。',p,{happy:8,credit:3})}]},
+{s:3,id:'kifu',t:'地元の高校',d:'地元の高校から講演と、奨学金の相談が来た。',ch:[
+ {l:'奨学金を出す',f:p=>o('毎年、手紙が届くようになった。',p,{cash:-500,happy:12,credit:5})},
+ {l:'起業部を立ち上げて教える',f:p=>o('教えることで、自分の経営も言葉になった。',p,{cash:-200,happy:10,media:1})},
+ {l:'講演だけする',f:p=>o('生徒の目が真剣だった。',p,{happy:4})}]},
+{s:3,id:'kaisha3',t:'共同で新会社',d:'知人の社長から「一緒に新会社を作らないか」。出資1,000万円。',ch:[
+ {l:'一緒に経営する',f:p=>o('保有会社が増えた。',p,{cash:-1000,companies:1,side:250})},
+ {l:'出資だけして、経営は任せる',f:p=>o('口は出さない。配当だけもらう。',p,{cash:-500,side:120})},
+ {l:'断る',f:p=>o('人とは組まない。',p,{})}]},
+{s:3,id:'salon',t:'経営者コミュニティ',d:'年会費300万円の経営者コミュニティ。「入れば人脈が広がる」と言われる。',ch:[
+ {l:'入る',r:1,f:p=>R()<.5?o('良い案件が回ってきた。',p,{cash:-300,side:200}):o('マウントの取り合いだった。',p,{cash:-300,happy:-5})},
+ {l:'自分でコミュニティを主宰する',f:p=>o('集まる側から、集める側になった。',p,{cash:-100,media:1,happy:3})},
+ {l:'入らない',f:p=>o('人脈は仕事で作る。',p,{})}]},
+{s:3,id:'dock',t:'人間ドック',d:'人間ドックで要精密検査。働きすぎだと言われた。',ch:[
+ {l:'しっかり休む',f:p=>o('体が一番の資産だった。',p,{happy:-2,cash:-50})},
+ {l:'トレーナーと食事に投資する',f:p=>o('体が変わると、判断も変わった。',p,{cash:-150,happy:6})},
+ {l:'無視して働く',r:1,f:p=>{later(p,2,q=>o('倒れた。3ヶ月入院した。',q,{happy:-15,cash:-300}));return o('まだ大丈夫だ。',p,{})}}]},
+{s:3,id:'mbo',t:'右腕からの申し出',d:'右腕の部長が「〔MBO〕で会社を買い取りたい」と言ってきた。',c:p=>p.ind&&!p.exited,ch:[
+ {l:'売る',f:p=>{const g=Math.max(0,val(p)-p.debt)*p.equity*.8;const net=Math.round(g*(1-.20315));p.debt=0;p.exited=true;p.exitType='sell';return{t:'相場より少し安く売った。会社は信頼できる人の手に渡った。〔譲渡益課税〕を引いて手元に残ったのがこれ。',e:m(p,{cash:net,happy:8}),stamp:'売却'}}},
+ {l:'段階的に株を譲る',f:p=>{const c=Math.round(val(p)*p.equity*.3*.8);return o('3割を譲った。少しずつ任せていく。',p,{cash:c,equity:.7,happy:6})}},
+ {l:'断る',f:p=>o('まだ譲れない。',p,{happy:-3})}]},
+{s:3,id:'angel2',t:'アクセラレーター',d:'起業支援プログラムから、メンター兼投資家として誘われた。',ch:[
+ {l:'参加して3社に出資する',r:1,f:p=>{p.angelCount+=2;return ang(p,800,3,.25,6000,'3社とも、まだ小さいまま。',400)}},
+ {l:'メンターだけやる',f:p=>o('若い起業家と話すのは面白い。',p,{happy:5,media:1})},
+ {l:'断る',f:p=>o('自分の事業に集中する。',p,{})}]},
+{s:3,id:'angel3',t:'同級生の起業',d:'同級生が起業した。「昔のよしみで、出資してくれないか」。',ch:[
+ {l:'300万円出す',r:1,f:p=>ang(p,300,3,.1,3000,'会社は続いている。でも、お金はまだ返ってこない。')},
+ {l:'出資の代わりに顧客を紹介する',f:p=>o('紹介した客で、同級生の会社は軌道に乗った。',p,{happy:5,credit:3})},
+ {l:'断る',f:p=>o('友達とお金は分ける。',p,{happy:-3})}]},
+{s:3,id:'kouen',t:'講演の依頼',d:'商工会議所から講演の依頼。テーマは「失敗から学んだこと」。',ch:[
+ {l:'引き受ける',f:p=>o(p.bankrupt?'倒産した話をしたら、会場が一番静かになった。依頼が続いた。':'失敗談を話した。質問が止まらなかった。',p,{cash:30,credit:3,media:p.bankrupt?2:1})},
+ {l:'講演を録画して配信する',f:p=>o('会場の外にも届いた。',p,{media:1,happy:-2})},
+ {l:'断る',f:p=>o('人前で話すのは柄じゃない。',p,{})}]},
+{s:3,id:'heir',t:'後継ぎ',d:'そろそろ後継ぎを考える時期だ。',c:p=>p.ind&&!p.exited,ch:[
+ {l:'子どもに継がせる',f:p=>{p.heir=1;return o('子どもが入社した。まずは現場から。',p,{happy:5})}},
+ {l:'社員から後継者を育てる',f:p=>o('一番現場を知る人に、少しずつ任せ始めた。',p,{happy:8,credit:3})},
+ {l:'まだ決めない',f:p=>o('自分が一番うまくやれる、と思っている。',p,{happy:-3})}]},
+{s:3,id:'tsukare3',t:'何のために',d:'お金はある。なのに、何のために働いているのか分からない。',c:p=>p.happy<45,ch:[
+ {l:'新しい挑戦を探す',f:p=>o('知らないことを知るのは、やっぱり楽しい。',p,{happy:8})},
+ {l:'働き続ける',f:p=>o('考えるのをやめた。',p,{happy:-5,side:100})},
+ FARM]},
+{s:3,id:'npo',t:'寄付の相談',d:'地元のNPOから寄付の相談が来た。',ch:[
+ {l:'寄付する',f:p=>o('子ども食堂の冷蔵庫が新しくなった。',p,{cash:-300,happy:8})},
+ {l:'社員のボランティア休暇を作る',f:p=>o('社員が自分から動くようになった。',p,{cash:-50,happy:6})},
+ {l:'断る',f:p=>o('税金で社会に返している。',p,{})}]},
+{s:3,id:'golf',t:'ゴルフ会員権',d:'取引先の社長に「うちのコースの会員権、どう？」と勧められた。',ch:[
+ {l:'買う',f:p=>o('月に一度、取引先と回るようになった。案件も回ってくる。',p,{cash:-800,side:80,credit:2})},
+ {l:'たまにビジターで付き合う',f:p=>o('ほどよい距離感。',p,{cash:-30,credit:2})},
+ {l:'断る',f:p=>o('ゴルフはやらない。',p,{})}]},
+{s:3,id:'nishame',t:'2社目の不調',d:'新しく作った会社の業績が悪化している。',c:p=>p.companies>=1,ch:[
+ {l:'撤退する',f:p=>o('傷が浅いうちに畳んだ。',p,{side:-150,cash:-200,companies:-1})},
+ {l:'外から社長を招く',f:p=>o('プロに任せたら持ち直した。',p,{cash:-200,side:100})},
+ {l:'追加で投資する',r:1,f:p=>R()<.5?o('立て直った。',p,{cash:-800,side:300}):o('穴が広がった。',p,{cash:-800,side:-200})}]},
+
+/* ===== ドバイ準備 ===== */
+{s:4,id:'golden',t:'ゴールデンビザ',d:'ドバイで200万ディルハム（約8,000万円）の不動産を買えば〔ゴールデンビザ〕が取れる。',ch:[
+ {l:'買う',r:1,f:p=>{const sh=Math.max(0,8000-p.cash);p.flags.golden=1;return o('ビザが下りた。家賃収入も入る。'+(sh?'足りない分は借りた。':''),p,{cash:-8000+sh,debt:sh,side:300})}},
+ {l:'会社を作って2年ビザで様子を見る',f:p=>o('まずは住んでみる。',p,{cash:-300,happy:2})},
+ {l:'見送る',f:p=>o('賃貸で様子を見る。',p,{})}]},
+{s:4,id:'shukkoku',t:'出国税の試算',d:'出国前に、顧問税理士が〔国外転出時課税〕を試算した。',ch:[
+ {l:'払って出る',f:p=>{const h=val(p)*p.equity;if(h>=10000)return o('持株の含み益に所得税がかかった。売っていないのに。',p,{cash:-Math.round(h*.5*.15315)});return o('対象外だった（1億円未満）。',p,{})}},
+ {l:'担保を出して納税猶予を受ける',f:p=>{const h=val(p)*p.equity;if(h>=10000)return o('〔納税猶予〕を受けた。いずれ株を売るときに払う。',p,{cash:-Math.round(h*.5*.15315*.1),credit:3});return o('そもそも対象外だった。',p,{})}},
+ {l:'出国を数年延ばす',f:p=>o('ドバイは遠のいた。',p,{happy:-5})}]},
+{s:4,id:'r183',t:'居住者の判定',d:'日本の顧問から「〔183日ルール〕だけで判断しないでください」と言われた。',ch:[
+ {l:'生活の本拠ごと移す',f:p=>o('家も口座も、生活ごと移した。',p,{happy:-5,credit:5})},
+ {l:'日本と半々で暮らす',r:1,f:p=>{later(p,2,q=>o('日本の居住者と判定され、所得税を追徴された。',q,{cash:-1000}));return o('いいとこ取りのつもりだった。',p,{happy:5})}},
+ {l:'やっぱり日本に住み続ける',f:p=>o('ドバイは旅行で行けばいい。',p,{happy:5})}]},
+{s:4,id:'offplan',t:'完成前の物件',d:'〔オフプラン〕物件。完成時には2割上がる見込みだという。3,000万円。',ch:[
+ {l:'買う',r:1,f:p=>{later(p,2,q=>R()<.6?o('完成して売り抜けた。',q,{cash:3800}):o('開発が遅れて値下がり。損切りした。',q,{cash:2000}));return o('手付を払った。',p,{cash:-3000})}},
+ {l:'完成済みの中古を買う',f:p=>o('派手さはない。家賃が入る。',p,{cash:-3000,side:150})},
+ {l:'見送る',f:p=>o('現地を知るまで買わない。',p,{})}]},
+{s:4,id:'nokosu',t:'日本に残る社員',d:'日本に残す社員たちに、何を残していくか。',ch:[
+ {l:'ストックオプションと持株会を配る',f:p=>o('〔ストックオプション〕と持株会で、「社長がいなくても回る会社」になった。',p,{cash:-500,happy:12})},
+ {l:'社内から日本法人の社長を指名する',f:p=>o('一番現場を知る人に任せた。',p,{happy:8,credit:3})},
+ {l:'何もしない',f:p=>o('送別会は、思ったより静かだった。',p,{happy:-6})}]},
+{s:4,id:'freezone',t:'ドバイで会社設立',d:'ドバイの〔フリーゾーン〕に会社を作るか。',ch:[
+ {l:'貿易会社を作る',f:p=>o('外資100%で設立。現地の取引先も見つけた。',p,{cash:-400,companies:1,side:200})},
+ {l:'日本企業向けのコンサル会社を作る',f:p=>o('進出したい日本の中小企業から相談が来る。',p,{cash:-200,companies:1,side:120})},
+ {l:'作らない',f:p=>o('身軽でいる。',p,{})}]},
+{s:4,id:'crypto',t:'ドバイの儲け話',d:'現地の日本人起業家に「一緒に暗号資産の取引所をやろう」と誘われた。2,000万円。',ch:[
+ {l:'乗る',r:1,f:p=>R()<.3?o('ライセンスが下り、事業は軌道に乗った。',p,{side:900,cash:-2000,companies:1}):o('ライセンスが下りず頓挫。',p,{cash:-2000,happy:-4})},
+ {l:'VARAの規制を調べてから決める',f:p=>o('〔VARA〕の要件を読んで、見送ると決めた。',p,{credit:3})},
+ {l:'断る',f:p=>o('知らない土地で、知らない商売はしない。',p,{})}]},
+{s:4,id:'family',t:'本当に行くのか',d:'大切な人に聞かれた。「本当に行くの？」',ch:[
+ {l:'説得して一緒に行く',f:p=>o('引っ越し費用はかさんだ。でも一人じゃない。',p,{happy:6,cash:-500})},
+ {l:'日本と行き来する',f:p=>o('飛行機代はかさむ。',p,{cash:-300,happy:-2})},
+ {l:'一人で行く',f:p=>o('身軽にはなった。',p,{happy:-8})}]},
+{s:4,id:'genchi',t:'現地の商習慣',d:'ドバイの商習慣は、日本と全く違う。',ch:[
+ {l:'現地のパートナーを探す',f:p=>o('人脈が一気に広がった。',p,{cash:-200,side:100})},
+ {l:'日本人コミュニティに頼る',f:p=>o('安心はできる。世界は広がらない。',p,{cash:-100,credit:2})},
+ {l:'自力で覚える',f:p=>o('時間はかかる。',p,{happy:-3})}]},
+{s:4,id:'sns',t:'ドバイ在住社長',d:'「ドバイ在住の社長」として、SNSのフォロワーが急に伸び始めた。',ch:[
+ {l:'発信を続ける',f:p=>o('講演や取材の依頼が来るようになった。',p,{media:1,side:100,happy:-2})},
+ {l:'情報商材を売る',r:1,f:p=>o('売れた。でも、それは昔の自分が買わされたものと同じだった。',p,{cash:1500,credit:-15,happy:-5})},
+ {l:'やめる',f:p=>o('静かに暮らす。',p,{happy:3})}]},
+{s:4,id:'tsukare4',t:'本当に行きたいのか',d:'ここまで来た。でも、本当にドバイに行きたいのか分からなくなった。',c:p=>p.happy<45,ch:[
+ {l:'行くと決める',f:p=>o('迷いを振り切った。',p,{happy:5})},
+ {l:'迷いながら準備を続ける',f:p=>o('答えは出ない。',p,{happy:-3})},
+ FARM]},
+{s:4,id:'kouen2',t:'現地での講演',d:'ドバイの日本人経営者の集まりで、講演を頼まれた。',ch:[
+ {l:'引き受ける',f:p=>o('日本では会えない人たちと知り合った。',p,{media:1,credit:3})},
+ {l:'有料セミナーにする',f:p=>o('売上は立った。少し距離を置かれた。',p,{cash:200,media:1,credit:-2})},
+ {l:'断る',f:p=>o('ここでは、ただの一人でいたい。',p,{})}]},
+{s:4,id:'zeirishi',t:'日本の税理士',d:'日本の顧問税理士との契約を続けるか。',ch:[
+ {l:'納税管理人を立てる',f:p=>o('〔納税管理人〕を置いて、日本の申告を任せた。',p,{cash:-60,credit:5})},
+ {l:'契約を続ける',f:p=>o('日本の会社のことは任せられる。',p,{cash:-120,credit:3})},
+ {l:'解約する',r:1,f:p=>{later(p,2,q=>o('日本での申告漏れが見つかった。',q,{cash:-500}));return o('固定費が減った。',p,{})}}]},
+{s:4,id:'byouki',t:'現地で体調を崩す',d:'現地で体調を崩した。医療費は日本の何倍もかかる。',ch:[
+ {l:'海外の医療保険で受診する',f:p=>o('入っておいてよかった。',p,{cash:-50})},
+ {l:'一時帰国して治す',f:p=>o('日本の保険証のありがたみを知った。',p,{cash:-100,happy:-2})},
+ {l:'自費で現地の病院に行く',f:p=>o('請求書を見て、熱が上がった。',p,{cash:-400})}]}
+];
+
+/* ---------- 止まりマス ---------- */
+function found(p,key){const I=IND[key];let t=I.n+'の会社を設立。';let loan=0;let init=I.init;
+ if(key==='unso'&&p.lic.unkan){init-=300;t+='自分が〔運行管理者〕になれるので、管理者を雇わずに済んだ（初期費用 -300万円）。'}
+ if(p.lic.boki)t+='事業計画書の数字を自分で作れたので、融資の面談で詰まらなかった。';
+ if(p.cash<init+100){loan=Math.ceil((init+300-p.cash)/100)*100;t+='自己資金が足りず、〔創業融資〕を受けた。'}
+ if(p.flags.customer){p.scale*=1.2;t+='取引先がついてきてくれたので、初年度から売上が立つ。'}
+ if(p.flags.test){p.scale*=1.1;t+='副業で試した手応えが、そのまま事業計画になった。'}
+ if(p.flags.insider){p.scale*=1.15;t+='業界の中で見てきた儲け方が活きる。'}
+ if(p.flags.partner){p.scale*=1.2;t+='同期と二人でのスタート。'}
+ p.ind=key;p.years=0;return{t:t+'初期費用を払った。',e:m(p,{cash:loan-init,debt:loan}),stamp:'設立'}}
+function sell(p,ratio,type){const v=val(p);let g=Math.max(0,v-p.debt)*p.equity;const n=[];
+ if(p.flags.cvc){g*=1.2;n.push('提携先の大手が買い手になり、上乗せが付いた。')}
+ if(p.flags.funsoku){g*=.6;n.push('過去の粉飾が見つかり、〔表明保証〕違反で大きく減額された。')}
+ if(p.flags.vc)n.push('〔優先株〕を持つVCが、先に投資額を回収した。');
+ g=Math.round(g);const fee=Math.round(g*.05),tax=Math.round((g-fee)*.20315),net=Math.round((g-fee-tax)*ratio);
+ p.debt=0;p.exited=true;p.exitType=type;
+ if(type==='earnout'){const rest=Math.round((g-fee-tax)*.55);later(p,2,q=>R()<.45+q.happy/200?o('業績目標を達成。追加の対価が入った。',q,{cash:rest}):o('目標に届かず、追加の対価はゼロ。',q,{}))}
+ return{t:`売却額は${yen(g)}（借入は買い手が引き継ぎ）。仲介手数料（〔レーマン方式〕）${yen(fee)}と〔譲渡益課税〕${yen(tax)}を引いて、`+(type==='earnout'?'今回受け取るのは6割。残りは2年後の業績次第。':'手元に残ったのがこれ。')+n.join(''),e:m(p,{cash:net}),stamp:'売却'}}
+function ipo(p){const v=val(p);const pr=clamp((p.credit-30)/70+(v>=20000?.25:0)+(p.flags.ipoprep?.15:0)-(p.flags.funsoku?.6:0),.05,.9);p.cash-=500;
+ if(R()<pr){const mv=Math.round(v*1.6);const g=Math.max(0,mv-p.debt)*p.equity;const net=Math.round(g*(1-.20315)*.9);p.debt=0;p.exited=true;p.exitType='ipo';
+  return{t:`〔主幹事〕と〔監査法人〕に伴走してもらい、東証グロースに上場。時価総額は${yen(mv)}。〔ロックアップ〕が明けてから持株を順に売った。`,e:'上場準備 -500万円　'+m(p,{cash:net,media:1}),stamp:'上場'}}
+ p.flags.owner=1;return{t:'上場審査で落ちた。準備に使った費用は戻らない。オーナーとして続けることになった。',e:'上場準備 -500万円',stamp:'不合格'}}
+function buildNew(p,cost,n,side,t){const sh=Math.max(0,cost-p.cash);return o(t+(sh?'足りない分は借りた。':''),p,{cash:-cost+sh,debt:sh,companies:n,side})}
+
+function stopEv(p,k){
+ if(k==='found')return{t:'法人設立',d:'登記の日。何で勝負するかを決める。初期費用が足りなければ〔創業融資〕で埋める。',ch:Object.keys(IND).map(key=>({k:key,l:IND[key].n+'（初期費用 '+yen(IND[key].init)+'）',sub:IND[key].d,f:p=>found(p,key)}))};
+ if(k==='raise')return{t:'資金調達ラウンド',d:`今の〔バリュエーション〕の目安は${yen(val(p))}。ここで伸ばし方を決める。`,ch:[
+  {k:'vc',l:'VCからシリーズAを調達する',r:1,sub:'現金と規模は手に入る。株は減る',f:p=>{const pre=Math.max(Math.round(val(p)*1.5),p.ind==='saas'?4000:1500);const raise=Math.round(pre*.3);let eq=pre/(pre+raise);let x='';if(p.flags.jkiss){eq*=.93;x='〔J-KISS〕の分も株に転換された。'}p.flags.vc=1;
+   return{t:`〔VC〕から、プレマネー${yen(pre)}で${yen(raise)}を調達。株は〔優先株〕で渡した。${x}〔希薄化〕はこれからも続く。`,e:m(p,{cash:raise,equity:eq,scale:1.5,floor:pre+raise-p.floorVal})}}},
+  {k:'koko',l:'日本政策金融公庫から2,000万円借りる',sub:'株は100%自分のまま。毎年の返済が重くなる',f:p=>o('借りた。返済表を冷蔵庫に貼った。',p,{cash:2000,debt:2000,scale:1.15})},
+  {k:'cf',l:'株式投資型クラウドファンディングで集める',sub:'ファンが株主になる。額は小さめ',f:p=>o('〔株式投資型クラウドファンディング〕で、数百人の個人株主ができた。応援してくれる客でもある。',p,{cash:800,equity:.93,happy:4,media:1})},
+  {k:'boot',l:'自己資金だけで回す',sub:'誰にも口を出されない。伸びは自分の稼ぎ次第',f:p=>o('無借金・株100%。地道にいく。',p,{happy:6,scale:1.05})}]};
+ if(k==='exit')return{t:'EXITの判断',d:`今の企業価値は${yen(val(p))}、持株は${pct(p.equity)}。売るなら〔デューデリジェンス〕で帳簿は全部見られる。`,ch:[
+  {k:'sell',l:'M&A仲介を通して全株を売る',r:1,f:p=>sell(p,1,'sell')},
+  {k:'earn',l:'アーンアウト付きで売り、2年残る',sub:'売却代金の一部が、売った後の業績次第になる',f:p=>sell(p,.6,'earnout')},
+  {k:'ipo',l:'IPOを目指す（準備費用500万円）',r:1,sub:'信用と企業価値が高いほど通りやすい',f:p=>ipo(p)},
+  {k:'keep',l:'売らない。オーナーとして続ける',f:p=>{p.flags.owner=1;return o('会社は自分の手の中。上がりは遠くなるが、守るものが残る。',p,{happy:8,scale:1.2})}}]};
+ if(k==='next')return{t:'次の一手',d:p.exited?'売却で手にした現金をどう使うか。':'本業は回っている。ここから広げるか。',ch:[
+  {k:'hd',l:'ホールディングスを作り、2社を同時に立ち上げる（3,000万円）',r:1,f:p=>buildNew(p,3000,2,700,'〔ホールディングス〕の下に2社。事業ごとにリスクを切り分けた。')},
+  {k:'one',l:'1社だけ新しく作る（1,200万円）',f:p=>buildNew(p,1200,1,300,'新会社を設立。小さく始めた。')},
+  {k:'serial',l:'売った金で、また一から起業する（1,500万円）',dis:p=>!p.exited,sub:'売却済みのときだけ選べる',f:p=>{p.serial=1;return buildNew(p,1500,1,250,'2回目の起業。1回目より、失敗する場所が見えている。')}},
+  {k:'angelfund',l:'エンジェル投資を本格的に始める（3,000万円で6社）',r:1,f:p=>{p.angelCount+=6;later(p,3,q=>{if(R()<.35){q.angelWins++;return o('投資先の1社が上場。投資額の何倍にもなった。',q,{cash:15000})}return o('6社のうち4社が解散。残りはまだ小さい。',q,{cash:1500})});return o('6社に500万円ずつ投資した。',p,{cash:-3000})}},
+  {k:'none',l:'広げない。資産を守る',f:p=>o('守りに入った。それも一つの判断。',p,{happy:3})}]};
+}
+
+function draw(p){const s=stg(p.pos);const ok=e=>e.s===s&&(!e.c||e.c(p));let pool=EV.filter(e=>ok(e)&&!p.used.has(e.id));
+ if(!pool.length){EV.filter(e=>e.s===s).forEach(e=>p.used.delete(e.id));pool=EV.filter(ok)}
+ if(!pool.length)return{t:'平穏な一年',d:'特に何も起きなかった。',ch:[{l:'進む',f:p=>o('淡々と働いた。',p,{})}]};
+ const e=pool[Math.floor(R()*pool.length)];p.used.add(e.id);return e}
+const squareEv=p=>STOPS[p.pos]&&STOPS[p.pos]!=='goal'?stopEv(p,STOPS[p.pos]):draw(p);
+function move(p,n){for(let i=0;i<n;i++){p.pos++;if(STOPS[p.pos])return}}
+
+function settle(p){const L=[];
+ p.pending.forEach(x=>x.n--);const due=p.pending.filter(x=>x.n<=0);p.pending=p.pending.filter(x=>x.n>0);
+ due.forEach(x=>{const r=x.f(p);L.push(['後から来た',plain(r.t)+(r.e?'（'+r.e+'）':''),1])});
+ if(!p.ind&&!p.exited){p.cash+=p.salary;L.push(['給料から貯金',sy(p.salary)])}
+ else if(p.ind&&!p.exited){p.years++;const I=IND[p.ind];const pr=Math.round(expP(p)*(.7+p.happy/200)*(1+I.vol*(R()-.5)*2));p.lastProfit=pr;p.cash+=pr;L.push(['営業利益',sy(pr)]);
+  if(pr>0){const tx=Math.round(pr*.3);p.cash-=tx;L.push(['法人税など',sy(-tx)])}}
+ if(p.side>0){const s=Math.round(p.side*.7);p.cash+=s;L.push(['ほかの会社・投資から（税引後）',sy(s)])}
+ if(p.debt>0){const it=Math.round(p.debt*.025),pr=Math.max(1,Math.round(p.debt*.1));p.cash-=it+pr;p.debt-=pr;L.push(['支払利息',sy(-it)]);L.push(['元本の返済（経費にならない）',sy(-pr)])}
+ p.floorVal=Math.round(p.floorVal*.9);return L}
+
+function bankrupt(p){
+ if(p.bankrupt>=1){p.dead=true;return{t:'二度目の倒産。〔連帯保証〕していた借入が個人に降りかかり、家も貯金も持っていかれた。',e:'',stamp:'退場'}}
+ p.bankrupt++;p.media++;const carry=p.flags.guarantee?Math.round(p.debt*.3):0;
+ Object.assign(p,{cash:0,debt:carry,ind:null,years:0,scale:1,floorVal:0,equity:1,exited:false,exitType:null,side:0,companies:0,pos:9,flags:{},pending:[],credit:Math.max(10,p.credit-20)});
+ return{t:'倒産。会社は消えた。'+(carry?'〔経営者保証〕の分、借金が個人に残った。':'個人保証はなかったので、借金は会社と一緒に消えた。')+'下積みの最後のマスからやり直す。この経験は、いつか人前で語れる話になる。次に倒産したら退場。',e:carry?'個人の借入 '+yen(carry):'',stamp:'倒産'}}
+function crisisEv(p){const need=-p.cash;return{t:'資金ショート',d:`現金が${yen(need)}足りない。`+(p.lastProfit>0?'利益は出ているのに、だ。これが〔黒字倒産〕の入り口。':'このままでは支払いができない。'),ch:[
+ {l:'〔つなぎ融資〕を頼む（信用40以上）',dis:p=>p.credit<40,f:p=>{const n=-p.cash+300;return o('銀行は貸してくれた。「次はないですよ」という顔だった。',p,{cash:n,debt:n,credit:-8})}},
+ {l:'〔リスケ〕を申し込む（信用20以上）',dis:p=>p.credit<20,f:p=>{const n=-p.cash+100;return o('返済を待ってもらった。新しい融資はしばらく無理だ。',p,{cash:n,debt:n,credit:-15})}},
+ FARM,
+ {k:'die',l:'会社をたたむ',f:p=>bankrupt(p)}]}}
+
+/* ---------- CPU ---------- */
+function pickCpu(p,ev){const ok=ev.ch.map((c,i)=>i).filter(i=>!(ev.ch[i].dis&&ev.ch[i].dis(p))&&ev.ch[i].k!=='die'&&ev.ch[i].k!=='farm');
+ const want=p.plan[STOPS[p.pos]];if(want){const i=ev.ch.findIndex(c=>c.k===want);if(i>=0)return i}
+ const risky=ok.filter(i=>ev.ch[i].r),safe=ok.filter(i=>!ev.ch[i].r);
+ if(risky.length&&(R()<p.risk||!safe.length))return risky[Math.floor(R()*risky.length)];return safe.length?safe[0]:ok[0]}
+function cpuTurn(p){if(p.dead)return `${p.name}：退場済み。`;if(p.done)return `${p.name}：ゴールで待っている。`;
+ move(p,1+Math.floor(R()*6));
+ if(p.pos>=50){p.done=true;return `${p.name}：ゴールに到着した。`}
+ const ev=squareEv(p);const i=pickCpu(p,ev);const c=ev.ch[i];const r=c.f(p);
+ let line=`${p.name}：「${plain(ev.t)}」で「${plain(c.l)}」。${plain(r.t).split('。')[0]}。`;
+ if(p.dead)return line;settle(p);
+ if(p.cash<0){if(p.credit>=40){const n=-p.cash+300;m(p,{cash:n,debt:n,credit:-8});line+='資金ショートをつなぎ融資でしのいだ。'}
+  else if(p.credit>=20){const n=-p.cash+100;m(p,{cash:n,debt:n,credit:-15});line+='資金ショート。リスケでしのいだ。'}
+  else{const b=bankrupt(p);line+=plain(b.t).split('。')[0]+'。'}}
+ return line}
+
+/* ---------- 画面 ---------- */
+let G=null,cur=null,phase='roll';
+const COLORS={you:'#1B2939',k:'#B8282B',t:'#2C6A4E'};
+function initStart(){$('#origins').innerHTML=Object.entries(ORIG).map(([k,v])=>`<button class="opt" type="button" data-o="${k}"><b>${v.n}</b><small>${v.d}</small></button>`).join('')}
+function begin(orig){G={year:1,ps:[mk('あなた',orig,false,0,COLORS.you,{}),mk('神崎','gakusei',true,.8,COLORS.k,{found:'saas',raise:'vc',exit:'sell',next:'hd'}),mk('堅田','kaisha',true,.2,COLORS.t,{found:'unso',raise:'koko',exit:'keep',next:'one'})],news:[]};
+ $('#log').innerHTML='';$('#start').hidden=true;$('#end').hidden=true;$('#game').hidden=false;phase='roll';
+ render();rollPrompt(['ライバルの神崎は学生起業、堅田は会社員から。同じ盤の上を進む。'])}
+const you=()=>G.ps[0];
+function ageOf(p){return ORIG[p.orig].age+G.year-1}
+function render(){const p=you();
+ $('#yr').textContent=G.year+'年目';$('#age').textContent=ageOf(p)+'歳・'+STG[stg(p.pos)].n+'・マス'+p.pos;
+ let b='';for(let i=0;i<=50;i++){const cls=i===50?'goal':'s'+stg(i);const toks=G.ps.filter(q=>!q.dead&&Math.min(q.pos,50)===i).map(q=>`<span class="tok" style="background:${q.color}" title="${q.name}"></span>`).join('');
+  b+=`<div class="cell ${cls}${STOPS[i]?' stop':''}">${STOPLB[i]?`<span class="lb">${STOPLB[i]}</span>`:i===0?'<span class="lb">S</span>':''}${toks}</div>`}
+ $('#board').innerHTML=b;
+ $('#legend').innerHTML=STG.map((s,i)=>`<span><i class="s${i}"></i>${s.n}</span>`).join('')+G.ps.map(q=>`<span><i style="background:${q.color};border-radius:50%"></i>${q.name}</span>`).join('');
+ const v=val(p),n=nw(p);
+ $('#stats').innerHTML=`
+  <div class="st"><div class="k">現金</div><div class="v ${p.cash<0?'neg':''}">${yen(p.cash)}</div></div>
+  <div class="st"><div class="k">借入</div><div class="v">${yen(p.debt)}</div></div>
+  <div class="st"><div class="k">企業価値（持株${pct(p.equity)}）</div><div class="v">${p.ind&&!p.exited?yen(v):p.exited?'売却済み':'未設立'}</div></div>
+  <div class="st"><div class="k">純資産</div><div class="v ${n<0?'neg':''}">${yen(n)}</div></div>
+  <div class="st"><div class="k">信用 ${p.credit}</div><div class="bar"><i style="width:${p.credit}%"></i></div></div>
+  <div class="st"><div class="k">周りの幸せ ${p.happy}</div><div class="bar h"><i style="width:${p.happy}%"></i></div></div>
+  <div class="st meta">本業：${p.ind?IND[p.ind].n+(p.exited?'（売却済み）':'・'+p.years+'期目'):'まだ雇われ'}　新しく作った会社：${p.companies}社　副収入：${yen(p.side)}/年　知名度：${p.media}　投資先：${p.angelCount}社${p.bankrupt?'　倒産歴：'+p.bankrupt+'回':''}</div>`;
+ $('#rivals').innerHTML=G.ps.slice(1).map(q=>`<div class="rv"><span class="dot" style="background:${q.color}"></span><span><span class="nm">${q.name}</span>　${q.dead?'退場':q.done?'ゴール':STG[stg(q.pos)].n+'・マス'+q.pos}${q.ind&&!q.dead?'・'+IND[q.ind].n:''}</span><span class="num">${yen(nw(q))}</span></div>`).join('');
+ $('#rollBtn').disabled=phase!=='roll'}
+
+function rollPrompt(news){phase='roll';const c=$('#card');c.classList.remove('hasStamp');
+ c.innerHTML=`<div class="tag">${G.year}年目のはじまり</div><h2>サイコロを振る</h2>${news&&news.length?`<div class="news">${news.map(x=>`<div>${rich(x)}</div>`).join('')}</div>`:''}`;render()}
+function showEv(ev,pre){const p=you();cur=ev;const c=$('#card');c.classList.remove('hasStamp');
+ c.innerHTML=(pre||'')+`<div class="tag">${STG[stg(p.pos)].n}・マス${p.pos}${STOPS[p.pos]?'・止まりマス':''}</div><h2>${rich(ev.t)}</h2><p>${rich(ev.d)}</p><div class="choices">${ev.ch.map((ch,i)=>`<button type="button" class="choice" data-i="${i}" ${ch.dis&&ch.dis(p)?'disabled':''}><span>${lab(ch.l)}</span>${ch.sub?`<small>${lab(ch.sub)}</small>`:''}</button>`).join('')}</div>`;
+ phase='choose';render()}
+function ledgerHtml(L){return `<div class="ledger"><h3>${G.year}年目の決算</h3>${L.map(([k,v,long])=>`<div class="row${long?' long':''}"><span>${k}</span><span class="${String(v).startsWith('-')?'minus':''}">${rich(v)}</span></div>`).join('')}<div class="row"><span>年末の現金</span><span class="${you().cash<0?'minus':''}">${yen(you().cash)}</span></div></div>`}
+function resultHtml(r,title){return `<div class="tag">${title||''}</div><div class="result"><p>${rich(r.t)}</p>${r.e?`<p class="eff">${r.e}</p>`:''}</div>`}
+function stampOn(word){if(!word)return;const c=$('#card');c.classList.add('hasStamp');const s=document.createElement('div');s.className='stamp';s.textContent=word;c.appendChild(s)}
+
+function addLog(t){const li=document.createElement('li');li.innerHTML=`<b>${G.year}年目</b>　${rich(t)}`;$('#log').prepend(li)}
+
+function choose(i){const p=you();const ev=cur;const ch=ev.ch[i];if(!ch||(ch.dis&&ch.dis(p)))return;
+ const r=ch.f(p);addLog(`「${ev.t}」で「${ch.l}」。${r.t}`);
+ if(p.dead||p.farm)return finish();
+ if(ev.isCrisis){$('#card').innerHTML=resultHtml(r,'資金ショートの結末')+`<button class="primary" type="button" id="nextBtn">次の年へ</button>`;stampOn(r.stamp);phase='next';render();return}
+ const L=settle(p);
+ const html=resultHtml(r,plain(ev.t))+ledgerHtml(L);
+ if(p.cash<0){const ce=crisisEv(p);ce.isCrisis=true;showEv(ce,html+'<hr style="border:0;border-top:2px solid var(--red);margin:4px 0">');stampOn(r.stamp);return}
+ $('#card').innerHTML=html+`<button class="primary" type="button" id="nextBtn">次の年へ</button>`;stampOn(r.stamp);phase='next';render()}
+
+function nextYear(){const news=G.ps.slice(1).map(cpuTurn);G.year++;
+ if(G.year>36){render();return finish(true)}
+ rollPrompt(news)}
+
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function face(n){let h='';for(let i=0;i<9;i++)h+=PIPS[n].includes(i)?`<span class="pip${n===1?' big':''}" style="grid-row:${Math.floor(i/3)+1};grid-column:${i%3+1}"></span>`:'';return h}
+function roll(){if(phase!=='roll')return;phase='rolling';$('#rollBtn').disabled=true;const p=you();const n=1+Math.floor(R()*6);
+ const c=$('#card');const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;let k=0;
+ c.innerHTML=`<div class="tag">${G.year}年目</div><div class="dicebox"><div class="die" id="dice" role="img" aria-label="サイコロ">${face(1+Math.floor(R()*6))}</div></div><p class="diceno" id="diceno"></p>`;
+ const d=$('#dice');
+ const done=()=>{d.innerHTML=face(n);d.setAttribute('aria-label','サイコロの目 '+n);d.classList.remove('rolling');d.classList.add('landed');$('#diceno').textContent=n+'マス進む';setTimeout(()=>{move(p,n);render();if(p.pos>=50){p.pos=50;return finish()}showEv(squareEv(p))},reduce?400:1000)};
+ if(reduce)return done();d.classList.add('rolling');const t=setInterval(()=>{d.innerHTML=face(1+Math.floor(R()*6));if(++k>11){clearInterval(t);done()}},85)}
+
+const ENDS={
+ dubai:{n:'ドバイ上がり',d:'売った。広げた。そして税金の安い国へ。成功した起業家の、教科書どおりの上がり方。',b:3000},
+ angel:{n:'エンジェル投資家上がり',d:'売った金で、次の起業家に賭ける側に回った。当たるのは一握り。でもその一握りが、全部を払う。',b:2500},
+ speaker:{n:'講演家上がり',d:'壇上で、自分の経験を語って食べている。一番ウケるのは、成功談より失敗談だ。',b:2200},
+ serial:{n:'連続起業家上がり',d:'売って、また作った。起業そのものが仕事になった。',b:2200},
+ meishi:{n:'地元の名士上がり',d:'売らずに育てた会社が、地域の顔になった。ドバイには行かないが、商工会の新年会では一番前の席。',b:2000},
+ heir:{n:'家業上がり',d:'会社を子どもに託した。創業者から「先代」になる。',b:1800},
+ fire:{n:'早期リタイア上がり',d:'会社を売って、働くのをやめた。広げはしなかったが、お金の心配はない。',b:1500},
+ saiki:{n:'再起上がり',d:'一度潰れて、這い上がった。倒産を知っている経営者は、強い。',b:1500},
+ farm:{n:'農家上がり',d:'全部降りて、田舎で土をいじっている。数字は小さい。でも朝は静かだ。',b:1200},
+ yatoware:{n:'雇われ社長上がり',d:'会社は売った。でも毎朝、同じ会社に出社している。名刺の肩書きは変わらない。',b:1000},
+ futsu:{n:'中小企業の社長上がり',d:'派手さはない。でも会社は続いている。日本の会社の99%以上は中小企業だ。',b:500},
+ over:{n:'退場',d:'連帯保証で、個人の資産まで持っていかれた。',b:0}};
+function endingOf(p){const n=nw(p);let k;
+ if(p.dead)k='over';else if(p.farm)k='farm';
+ else if(p.exited&&p.exitType!=='earnout'&&p.companies>=2&&n>=15000)k='dubai';
+ else if(p.exitType==='earnout')k='yatoware';
+ else if(p.exited&&p.angelCount>=2&&p.angelWins>=1)k='angel';
+ else if(p.media>=3&&p.credit>=55)k='speaker';
+ else if(p.serial&&p.exited)k='serial';
+ else if(p.exited&&n>=10000)k='fire';
+ else if(p.heir&&p.ind&&!p.exited)k='heir';
+ else if(!p.exited&&p.ind&&p.happy>=60)k='meishi';
+ else if(p.bankrupt>0&&n>0)k='saiki';else k='futsu';
+ const E=ENDS[k];const a=p.dead?0:Math.max(0,Math.floor(n/100)),h=p.dead?0:p.happy*10,c=p.dead?0:p.credit*5;
+ return{k,E,n,a,h,c,score:a+h+c+E.b}}
+function finish(timeup){phase='end';const p=you();if(!p.dead&&!timeup)p.done=true;
+ const res=G.ps.map(q=>({q,r:endingOf(q)})).sort((a,b)=>b.r.score-a.r.score);const me=endingOf(p);
+ const el=$('#end');
+ el.innerHTML=`<div class="card hasStamp"><div class="tag">${G.year}年目・${ageOf(p)}歳${timeup?'・時間切れ':''}</div><h2>${me.E.n}</h2><p>${me.E.d}</p>
+  <div class="ledger"><h3>点数の内訳</h3>
+   <div class="row"><span>純資産 ${yen(me.n)}（100万円で1点）</span><span>${me.a.toLocaleString()}</span></div>
+   <div class="row"><span>周りの幸せ ${p.happy}（×10）</span><span>${me.h}</span></div>
+   <div class="row"><span>信用 ${p.credit}（×5）</span><span>${me.c}</span></div>
+   <div class="row"><span>上がり方のボーナス</span><span>${me.E.b}</span></div>
+   <div class="row"><span><b>合計</b></span><span><b>${me.score.toLocaleString()}</b></span></div></div>
+  <div class="stamp">${me.k==='over'?'退場':'上がり'}</div></div>
+  <h2>順位</h2><div class="rank">${res.map((x,i)=>`<div class="rk"><span class="no">${i+1}</span><span><b>${x.q.name}</b>　${x.r.E.n}${!x.q.done&&!x.q.dead&&x.q!==p?'（マス'+x.q.pos+'で道半ば）':''}<small>純資産 ${yen(x.r.n)}・幸せ ${x.q.happy}・信用 ${x.q.credit}</small></span><span class="sc">${x.r.score.toLocaleString()}</span></div>`).join('')}</div>
+  <details><summary>あなたの帳簿</summary><ol style="list-style:none;padding:0;font-size:13px;display:flex;flex-direction:column;gap:6px">${$('#log').innerHTML}</ol></details>
+  <button class="primary" type="button" id="againBtn">もう一度、入り口から</button>`;
+ $('#game').hidden=true;el.hidden=false;window.scrollTo(0,0)}
+
+/* 用語集 */
+function buildGloss(){$('#glist').innerHTML=Object.entries(GL).map(([k,v],i)=>`<dt id="g${i}" data-k="${k}">${k}</dt><dd data-k="${k}">${v}</dd>`).join('')}
+function openGloss(k){const s=$('#sheet');s.hidden=false;s.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+ if(k){const dt=[...s.querySelectorAll('dt')].find(e=>e.dataset.k===k);if(dt){dt.classList.add('hl');dt.nextElementSibling.classList.add('hl');dt.scrollIntoView({block:'center'})}}else s.scrollTop=0}
+
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.classList.contains('term')){openGloss(t.dataset.k);return}
+ if(t.dataset.o){begin(t.dataset.o);return}
+ if(t.classList.contains('choice')&&phase==='choose'){choose(+t.dataset.i);return}
+ if(t.id==='nextBtn'&&phase==='next'){nextYear();return}
+ if(t.id==='rollBtn'){roll();return}
+ if(t.id==='glossBtn'){openGloss();return}
+ if(t.id==='closeSheet'){$('#sheet').hidden=true;return}
+ if(t.id==='againBtn'){$('#end').hidden=true;$('#start').hidden=false;window.scrollTo(0,0)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#sheet').hidden=true});
+initStart();buildGloss();
+</script>
+
+</body>
+</html>
