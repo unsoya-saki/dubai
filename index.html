@@ -123,6 +123,7 @@ summary{cursor:pointer;font-family:var(--display);font-weight:800}
 @media (prefers-reduced-motion:reduce){.stamp{animation:none}.die{animation:none!important}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<script data-goatcounter="https://unsoya-saki.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -808,7 +809,9 @@ function cpuTurn(p){if(p.dead)return `${p.name}：退場済み。`;if(p.done)ret
 let G=null,cur=null,phase='roll';
 const COLORS={you:'#1B2939',k:'#B8282B',t:'#2C6A4E'};
 function initStart(){$('#origins').innerHTML=Object.entries(ORIG).map(([k,v])=>`<button class="opt" type="button" data-o="${k}"><b>${v.n}</b><small>${v.d}</small></button>`).join('')}
-function begin(orig){G={year:1,ps:[mk('あなた',orig,false,0,COLORS.you,{}),mk('神崎','gakusei',true,.8,COLORS.k,{found:'saas',raise:'vc',exit:'sell',next:'hd'}),mk('堅田','kaisha',true,.2,COLORS.t,{found:'unso',raise:'koko',exit:'keep',next:'one'})],news:[]};
+/* 遊ばれた回数（GoatCounter） */
+function gcEv(path,title){try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path:path,title:title,event:true})}catch(e){}}
+function begin(orig){gcEv('start-'+orig,'スタート');G={year:1,ps:[mk('あなた',orig,false,0,COLORS.you,{}),mk('神崎','gakusei',true,.8,COLORS.k,{found:'saas',raise:'vc',exit:'sell',next:'hd'}),mk('堅田','kaisha',true,.2,COLORS.t,{found:'unso',raise:'koko',exit:'keep',next:'one'})],news:[]};
  $('#log').innerHTML='';$('#start').hidden=true;$('#end').hidden=true;$('#game').hidden=false;phase='roll';
  render();rollPrompt(['ライバルの神崎は学生起業、堅田は会社員から。同じ盤の上を進む。'])}
 const you=()=>G.ps[0];
@@ -892,6 +895,7 @@ function endingOf(p){const n=nw(p);let k;
  return{k,E,n,a,h,c,score:a+h+c+E.b}}
 function finish(timeup){phase='end';const p=you();if(!p.dead&&!timeup)p.done=true;
  const res=G.ps.map(q=>({q,r:endingOf(q)})).sort((a,b)=>b.r.score-a.r.score);const me=endingOf(p);
+ gcEv('end-'+me.k+(timeup?'-timeup':''),me.E.n);
  const el=$('#end');
  el.innerHTML=`<div class="card hasStamp"><div class="tag">${G.year}年目・${ageOf(p)}歳${timeup?'・時間切れ':''}</div><h2>${me.E.n}</h2><p>${me.E.d}</p>
   <div class="ledger"><h3>点数の内訳</h3>
