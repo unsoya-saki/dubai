@@ -93,7 +93,7 @@ document.body.appendChild(sabProbe);
 let SAB = 0;
 document.body.appendChild(satProbe);
 function measureSat(){ SAT = Math.max(8, satProbe.getBoundingClientRect().height || 0); SAB = sabProbe.getBoundingClientRect().height || 0; }
-function groundH(){ return SAB + Math.max(120, H * 0.40); }
+function groundH(){ return SAB + Math.max(110, H * 0.22); }
 window.addEventListener("resize", () => { resize(); measureSat(); }); resize(); measureSat();
 
 function load(src){ const i = new Image(); i.src = src; return i; }
