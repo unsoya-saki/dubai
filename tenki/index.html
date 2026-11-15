@@ -185,9 +185,12 @@ function consensus(modelsHourly, i){
 // 連続する雨の時間をまとめる（例：14時〜17時）
 function rainRanges(times, cons, start, end){
   const out=[]; let cur=null;
+  // 一覧に出すのは「3つ中2つ以上が雨」の時間だけ。1時間だけの切れ目はつなげる
+  const wet = i => cons[i] && cons[i].n>0 && cons[i].k*2 > cons[i].n;
   for(let i=start;i<end;i++){
     const c = cons[i];
-    if(c.level!=="none"){
+    const isWet = wet(i) || (cur && wet(i+1) && i+1<end);
+    if(isWet){
       if(!cur) cur={from:i,to:i,sure:c.level==="sure",kmax:c.k,n:c.n};
       else { cur.to=i; cur.sure = cur.sure || c.level==="sure"; cur.kmax=Math.max(cur.kmax,c.k); }
     } else if(cur){ out.push(cur); cur=null; }
@@ -243,13 +246,20 @@ function renderAll(main, models){
   const box = $("alert");
   if(alerts.length===0){
     box.className="card alert";
-    box.innerHTML = `<div class="big">7か所とも、雨の予報なし</div><div class="pmeta">3つの予報が全部「降らない」と言っています。</div>`;
+    box.innerHTML = `<div class="big">7か所とも、雨の予報なし</div><div class="pmeta">3つの予報のうち2つ以上が「雨」と言っている時間はありません。</div>`;
   } else {
-    const sure = alerts.filter(a=>a.sure);
+    const places = [...new Set(alerts.map(a=>a.place))];
     box.className="card alert rain";
-    const head = sure.length ? `☔ 雨の予報あり（${[...new Set(sure.map(a=>a.place))].length}か所）` : `☁️ 降るかもしれない（予報が割れている）`;
-    box.innerHTML = `<div class="big">${head}</div><ul>${alerts.map(a=>
-      `<li><span><b>${a.place}</b>　${a.label}</span><span class="tag ${a.sure?'sure':'maybe'}">${a.sure?'3つとも雨':`${a.n}つ中${a.kmax}つが雨`}</span></li>`).join("")}</ul>`;
+    // 同じ時間帯の場所はまとめる
+    const groups = {};
+    alerts.forEach(a=>{ const g = groups[a.label] ||= {label:a.label, from:a.from, places:[], sure:false};
+      if(!g.places.includes(a.place)) g.places.push(a.place); g.sure = g.sure || a.sure; });
+    const list = Object.values(groups).sort((x,y)=>x.from-y.from);
+    const first = Math.min(...alerts.map(a=>a.from));
+    const firstLabel = list.find(g=>g.from===first)?.label.split("〜")[0];
+    const head = places.length===PLACES.length ? `☔ 7か所とも ${firstLabel}ごろから雨` : `☔ 雨の予報あり（${places.length}か所）`;
+    box.innerHTML = `<div class="big">${head}</div><ul>${list.map(g=>
+      `<li><span><b>${g.places.length===PLACES.length?'7か所とも':g.places.join('・')}</b>　${g.label}</span><span class="tag ${g.sure?'sure':'maybe'}">${g.sure?'3つとも雨の時間あり':'3つ中2つが雨'}</span></li>`).join("")}</ul>`;
   }
 }
 
