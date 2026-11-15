@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b1f3a">
+<title>目標、年内生き延びる｜ギャル子さんの年末避けゲー</title>
+<meta name="description" content="降ってくる残業・クレーム・全体朝礼を避けて、12月31日まで生き延びろ。「社畜」に当たったら即死。">
+<meta property="og:title" content="目標、年内生き延びる｜ギャル子さんの年末避けゲー">
+<meta property="og:description" content="降ってくる残業・クレーム・全体朝礼を避けて、12月31日まで生き延びろ。「社畜」に当たったら即死。">
+<meta property="og:image" content="https://unsoya-saki.github.io/dubai/nenmatsu/img/16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<script data-goatcounter="https://unsoya-saki.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+  :root{--bg:#1b1f3a;--ink:#fff;--gold:#ffcf3f;--pink:#ff4fa3;--red:#ff4b4b;--green:#2fd18b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
+    font-family:"M PLUS Rounded 1c",-apple-system,"Hiragino Maru Gothic ProN",sans-serif;
+    -webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px);text-align:center;
+    background:radial-gradient(circle at 50% 30%,#2c3370 0,#1b1f3a 70%);z-index:5}
+  .screen[hidden]{display:none}
+  .screen img{width:min(70vw,300px);height:auto;filter:drop-shadow(0 6px 0 rgba(0,0,0,.25))}
+  h1{font-size:clamp(26px,8vw,40px);margin:6px 0 2px;font-weight:900;letter-spacing:.02em;
+     color:var(--gold);text-shadow:0 3px 0 #b8860b,0 6px 12px rgba(0,0,0,.4)}
+  .sub{font-size:14px;opacity:.85;margin-bottom:14px;font-weight:700}
+  .rules{font-size:13px;line-height:1.75;background:rgba(255,255,255,.08);border-radius:16px;padding:10px 14px;margin:6px 0 16px;text-align:left;font-weight:700}
+  .rules b{color:var(--gold)}
+  .chip{display:inline-block;border-radius:999px;padding:0 8px;margin:1px 2px;font-size:12px}
+  .c-bad{background:#3a1f3f;border:2px solid var(--red)}
+  .c-good{background:#163f33;border:2px solid var(--green)}
+  .c-die{background:#000;border:2px solid #fff}
+  .btn{font:inherit;font-weight:900;font-size:19px;border:0;border-radius:18px;padding:14px 28px;margin:6px;min-width:220px;
+    color:#1b1f3a;background:linear-gradient(180deg,#ffe27a,#ffbf1f);box-shadow:0 5px 0 #c58d00;cursor:pointer}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c58d00}
+  .btn.ghost{background:#fff;color:#1b1f3a;box-shadow:0 5px 0 #b9b9c9;font-size:16px}
+  .btn.line{background:#06c755;color:#fff;box-shadow:0 5px 0 #048a3b;font-size:16px}
+  .big{font-size:clamp(22px,7vw,32px);font-weight:900;margin:6px 0}
+  .msg{font-size:15px;font-weight:700;opacity:.9;margin-bottom:10px;line-height:1.6}
+  .best{font-size:12px;opacity:.7;margin-bottom:8px}
+  .copied{font-size:12px;color:var(--gold);height:16px}
+  .credit{font-size:11px;opacity:.55;margin-top:8px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="screen" id="title">
+  <img src="img/16.png" alt="ギャル子さん">
+  <h1>目標、年内生き延びる</h1>
+  <div class="sub">ギャル子さんの年末避けゲー</div>
+  <div class="rules">
+    指でギャル子さんを左右に動かして、12月31日まで生き延びる。<br>
+    よける：<span class="chip c-bad">残業</span><span class="chip c-bad">クレーム</span><span class="chip c-bad">全体朝礼</span> ほか<br>
+    とる：<span class="chip c-good">糖分</span><span class="chip c-good">睡眠</span><span class="chip c-good">定時</span><span class="chip c-good">有給</span><br>
+    <span class="chip c-die">社畜</span> に当たったら <b>即死</b>。
+  </div>
+  <div class="best" id="bestT"></div>
+  <button class="btn" id="startBtn">12月1日、出勤</button>
+  <div class="credit">運送屋 さき ／ このギャル子さんのLINEスタンプ発売中</div>
+</div>
+
+<div class="screen" id="over" hidden>
+  <img id="overImg" src="img/09.png" alt="">
+  <div class="big" id="overTitle"></div>
+  <div class="msg" id="overMsg"></div>
+  <div class="best" id="bestO"></div>
+  <button class="btn" id="retryBtn">もう1回</button>
+  <a class="btn line" id="storeBtn" href="https://store.line.me/stickershop/product/49008235/ja" target="_blank" rel="noopener">このスタンプを見る</a>
+  <button class="btn ghost" id="shareBtn">結果をコピー</button>
+  <div class="copied" id="copied"></div>
+</div>
+
+<script>
+(() => {
+const cv = document.getElementById("cv"), cx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+}
+let SAT = 0;
+const satProbe = document.createElement("div");
+satProbe.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top);visibility:hidden";
+document.body.appendChild(satProbe);
+function measureSat(){ SAT = Math.max(8, satProbe.getBoundingClientRect().height || 0); }
+window.addEventListener("resize", () => { resize(); measureSat(); }); resize(); measureSat();
+
+function load(src){ const i = new Image(); i.src = src; return i; }
+const IMG = { chara: load("img/01_chara.png"), dead: load("img/09_chara.png"),
+  s11: load("img/11.png"), s10: load("img/10.png"), s15: load("img/15.png") };
+
+// ---- 降ってくる言葉 ----
+const BAD = [
+  {t:"残業", d:20}, {t:"クレーム", d:25}, {t:"会議", d:15},
+  {t:"締め切り", d:20}, {t:"全体朝礼", d:10}, {t:"「ちょっといい？」", d:15}
+];
+const GOOD = [
+  {t:"糖分", heal:15, wt:9, stamp:"s11"}, {t:"睡眠", heal:20, wt:7, stamp:"s10"},
+  {t:"定時", heal:25, wt:5, stamp:"s15"}, {t:"有給", heal:50, wt:1.2, inv:2.5}
+];
+const DAY_LINES = {
+  1:"目標、年内生き延びる", 6:"一日は勝手に終わる", 10:"考え方次第", 14:"心を無に",
+  16:"もう半分", 20:"あと半分", 24:"全部、気のせい", 28:"大丈夫、終わりは来る", 31:"帰れるだけ幸せ"
+};
+const HIT_LINES = ["生きてればOK","明日の自分に任せた","心を無に","全部、気のせい","考え方次第","息してる？"];
+
+const DAY_SEC = 2.8, LAST_DAY = 31;
+let state = "title", items = [], pops = [], toast = null, stampToast = null;
+let player, hp, t, day, spawnT, inv, shake, flash, lastTs = 0, cause = "", pointerX = null;
+
+function best(){ try{ return +localStorage.getItem("nenmatsu_best") || 0; }catch(e){ return 0; } }
+function saveBest(d){ try{ if(d > best()) localStorage.setItem("nenmatsu_best", d); }catch(e){} }
+function showBest(){ const b = best(); const s = b ? `自己ベスト：12月${b}日${b>=LAST_DAY?"（クリア）":""}` : ""; $("bestT").textContent = s; $("bestO").textContent = s; }
+showBest();
+
+function gc(path,title){ try{ if(window.goatcounter && window.goatcounter.count) window.goatcounter.count({path, title, event:true}); }catch(e){} }
+
+function start(){
+  player = { x: W/2, w: 0, h: 0 };
+  hp = 100; t = 0; day = 1; spawnT = 0.6; inv = 0; shake = 0; flash = 0;
+  items = []; pops = []; stampToast = null; toast = null; pointerX = null;
+  state = "play"; $("title").hidden = true; $("over").hidden = true;
+  showToast(DAY_LINES[1]); gc("nenmatsu/start","年末避けゲー スタート");
+}
+$("startBtn").onclick = start; $("retryBtn").onclick = start;
+
+// ---- 操作 ----
+function setPointer(e){ const p = e.touches ? e.touches[0] : e; pointerX = p.clientX; }
+cv.addEventListener("pointerdown", setPointer);
+cv.addEventListener("pointermove", e => { if(e.buttons || e.pointerType === "touch") setPointer(e); });
+cv.addEventListener("touchstart", e => { setPointer(e); e.preventDefault(); }, {passive:false});
+cv.addEventListener("touchmove", e => { setPointer(e); e.preventDefault(); }, {passive:false});
+let keyDir = 0;
+window.addEventListener("keydown", e => { if(e.key==="ArrowLeft") keyDir=-1; if(e.key==="ArrowRight") keyDir=1; });
+window.addEventListener("keyup", e => { if(e.key==="ArrowLeft"||e.key==="ArrowRight") keyDir=0; });
+
+function showToast(text){ toast = { text, t: 1.8 }; }
+
+// ---- 出現 ----
+function speed(){ return H * (0.30 + (day-1) * 0.014); }
+function interval(){ return Math.max(0.32, 0.85 - (day-1) * 0.017); }
+function spawn(){
+  const r = Math.random();
+  const deathP = day < 4 ? 0 : 0.015 + day * 0.001;
+  let it;
+  if(r < deathP) it = { kind:"die", t:"社畜" };
+  else if(r < deathP + 0.22){
+    const tot = GOOD.reduce((s,g)=>s+g.wt,0); let x = Math.random()*tot;
+    const g = GOOD.find(g => (x -= g.wt) < 0) || GOOD[0];
+    it = { kind:"good", ...g };
+  } else it = { kind:"bad", ...BAD[Math.floor(Math.random()*BAD.length)] };
+  const fs = Math.max(15, Math.min(24, W * 0.05));
+  cx.font = `900 ${fs}px "M PLUS Rounded 1c", sans-serif`;
+  it.fs = fs; it.w = cx.measureText(it.t).width + fs * 1.1; it.h = fs * 1.7;
+  it.x = it.w/2 + Math.random() * (W - it.w);
+  it.y = -it.h; it.v = speed() * (it.kind === "die" ? 1.15 : 0.85 + Math.random()*0.3);
+  it.wob = Math.random() * 6.28;
+  items.push(it);
+}
+
+// ---- 更新 ----
+function update(dt){
+  t += dt; flash = Math.max(0, flash - dt); shake = Math.max(0, shake - dt); inv = Math.max(0, inv - dt);
+  if(toast && (toast.t -= dt) <= 0) toast = null;
+  if(stampToast && (stampToast.t -= dt) <= 0) stampToast = null;
+  const nd = Math.min(LAST_DAY, 1 + Math.floor(t / DAY_SEC));
+  if(nd !== day){ day = nd; if(DAY_LINES[day]) showToast(DAY_LINES[day]); }
+  if(t >= DAY_SEC * LAST_DAY){ return end("clear"); }
+
+  // プレイヤー
+  const ph = Math.min(H * 0.17, 150), pw = ph * (122/218);
+  player.w = pw; player.h = ph;
+  if(pointerX !== null) player.x += (pointerX - player.x) * Math.min(1, dt * 16);
+  if(keyDir) player.x += keyDir * W * 1.1 * dt;
+  player.x = Math.max(pw/2, Math.min(W - pw/2, player.x));
+  const py = H - ph - Math.max(18, H*0.03);
+  const hb = { l: player.x - pw*0.32, r: player.x + pw*0.32, t: py + ph*0.06, b: py + ph*0.9 };
+
+  spawnT -= dt; if(spawnT <= 0){ spawn(); spawnT = interval() * (0.7 + Math.random()*0.6); }
+
+  for(const it of items){
+    it.y += it.v * dt; it.wob += dt * 3;
+    const l = it.x - it.w/2, r = it.x + it.w/2, tp = it.y - it.h/2, bt = it.y + it.h/2;
+    if(!it.dead && r > hb.l && l < hb.r && bt > hb.t && tp < hb.b){
+      it.dead = true;
+      if(it.kind === "good"){
+        hp = Math.min(100, hp + it.heal);
+        pops.push({ x: it.x, y: it.y, text: `${it.t} +${it.heal}`, col:"#2fd18b", t: 1 });
+        if(it.inv){ inv = it.inv; showToast("有給、最強"); }
+        if(it.stamp) stampToast = { img: IMG[it.stamp], t: 1.4 };
+      } else if(it.kind === "die"){
+        cause = "shachiku"; return end("dead");
+      } else if(inv <= 0){
+        hp -= it.d; flash = 0.25; shake = 0.25;
+        pops.push({ x: it.x, y: it.y, text: `${it.t} −${it.d}`, col:"#ff4b4b", t: 1 });
+        if(Math.random() < 0.35) showToast(HIT_LINES[Math.floor(Math.random()*HIT_LINES.length)]);
+        if(hp <= 0){ hp = 0; cause = "hp"; return end("dead"); }
+      }
+    }
+  }
+  items = items.filter(it => !it.dead && it.y - it.h < H + 40);
+  for(const p of pops){ p.t -= dt; p.y -= 40 * dt; }
+  pops = pops.filter(p => p.t > 0);
+}
+
+// ---- 描画 ----
+function rr(x,y,w,h,r){ cx.beginPath(); cx.moveTo(x+r,y); cx.arcTo(x+w,y,x+w,y+h,r); cx.arcTo(x+w,y+h,x,y+h,r); cx.arcTo(x,y+h,x,y,r); cx.arcTo(x,y,x+w,y,r); cx.closePath(); }
+function draw(){
+  const g = cx.createLinearGradient(0,0,0,H);
+  const k = (day-1)/30;
+  g.addColorStop(0, `hsl(${230 - k*20},45%,${22 - k*8}%)`); g.addColorStop(1, `hsl(${250 - k*30},40%,${12 - k*4}%)`);
+  cx.fillStyle = g; cx.fillRect(0,0,W,H);
+  cx.save();
+  if(shake > 0) cx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*6);
+
+  // 地面
+  cx.fillStyle = "rgba(255,255,255,.06)"; cx.fillRect(0, H - Math.max(18,H*0.03), W, Math.max(18,H*0.03));
+
+  // 言葉
+  for(const it of items){
+    const x = it.x - it.w/2 + Math.sin(it.wob) * 2, y = it.y - it.h/2;
+    cx.font = `900 ${it.fs}px "M PLUS Rounded 1c", sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle";
+    if(it.kind === "die"){
+      cx.shadowColor = "#ff2a2a"; cx.shadowBlur = 16;
+      rr(x,y,it.w,it.h,it.h/2); cx.fillStyle = "#000"; cx.fill(); cx.shadowBlur = 0;
+      cx.lineWidth = 3; cx.strokeStyle = "#fff"; cx.stroke(); cx.fillStyle = "#fff";
+    } else if(it.kind === "good"){
+      rr(x,y,it.w,it.h,it.h/2); cx.fillStyle = it.t === "有給" ? "#ffcf3f" : "#1f6e52"; cx.fill();
+      cx.lineWidth = 3; cx.strokeStyle = it.t === "有給" ? "#fff" : "#2fd18b"; cx.stroke();
+      cx.fillStyle = it.t === "有給" ? "#1b1f3a" : "#fff";
+    } else {
+      rr(x,y,it.w,it.h,10); cx.fillStyle = "#4a2240"; cx.fill();
+      cx.lineWidth = 3; cx.strokeStyle = "#ff4b4b"; cx.stroke(); cx.fillStyle = "#fff";
+    }
+    cx.fillText(it.t, it.x + Math.sin(it.wob) * 2, it.y + 1);
+  }
+
+  // ギャル子さん
+  const ph = player.h, pw = player.w, py = H - ph - Math.max(18, H*0.03);
+  if(inv > 0){ cx.globalAlpha = 0.55 + 0.45*Math.abs(Math.sin(t*12)); cx.shadowColor="#ffcf3f"; cx.shadowBlur=24; }
+  if(IMG.chara.complete) cx.drawImage(IMG.chara, player.x - pw/2, py, pw, ph);
+  cx.globalAlpha = 1; cx.shadowBlur = 0;
+
+  // ポップ
+  for(const p of pops){
+    cx.globalAlpha = Math.min(1, p.t * 2); cx.font = `900 18px "M PLUS Rounded 1c", sans-serif`;
+    cx.lineWidth = 4; cx.strokeStyle = "rgba(0,0,0,.6)"; cx.strokeText(p.text, p.x, p.y); cx.fillStyle = p.col; cx.fillText(p.text, p.x, p.y);
+  }
+  cx.globalAlpha = 1;
+  cx.restore();
+
+  if(flash > 0){ cx.fillStyle = `rgba(255,40,40,${flash})`; cx.fillRect(0,0,W,H); }
+
+  // 上のHUD
+  const top = SAT + 10;
+  cx.textAlign = "left"; cx.textBaseline = "top";
+  cx.font = `900 ${Math.min(34, W*0.08)}px "M PLUS Rounded 1c", sans-serif`;
+  cx.fillStyle = "#ffcf3f"; cx.fillText(`12月${day}日`, 16, top + 18);
+  cx.font = `800 13px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.8)";
+  cx.fillText(day >= LAST_DAY ? "大晦日。あと少し" : `年明けまで あと${LAST_DAY - day}日`, 16, top + 18 + Math.min(34, W*0.08) + 6);
+  // 体力バー
+  const bw = Math.min(170, W*0.38), bx = W - bw - 16, by = top + 26;
+  cx.textAlign = "right"; cx.font = `800 12px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.8)";
+  cx.fillText("体力", W - 16, top + 8);
+  rr(bx, by, bw, 14, 7); cx.fillStyle = "rgba(255,255,255,.15)"; cx.fill();
+  if(hp > 0){ rr(bx, by, bw*hp/100, 14, 7); cx.fillStyle = hp > 50 ? "#2fd18b" : hp > 25 ? "#ffcf3f" : "#ff4b4b"; cx.fill(); }
+
+  // セリフ
+  if(toast){
+    const a = Math.min(1, toast.t * 2.5);
+    cx.globalAlpha = a; cx.textAlign = "center"; cx.textBaseline = "middle";
+    const fs = Math.min(30, W*0.07); cx.font = `900 ${fs}px "M PLUS Rounded 1c", sans-serif`;
+    const tw = cx.measureText(toast.text).width + fs*1.4, y = H*0.3;
+    rr(W/2 - tw/2, y - fs, tw, fs*2, fs); cx.fillStyle = "rgba(255,255,255,.95)"; cx.fill();
+    cx.fillStyle = "#1b2a6b"; cx.fillText(toast.text, W/2, y + 1);
+    cx.globalAlpha = 1;
+  }
+  // スタンプ
+  if(stampToast && stampToast.img.complete){
+    const a = Math.min(1, stampToast.t * 3), s = Math.min(W*0.5, 200);
+    cx.globalAlpha = a; cx.drawImage(stampToast.img, W - s - 8, H*0.42, s, s*320/370); cx.globalAlpha = 1;
+  }
+}
+
+// ---- 終わり ----
+function end(kind){
+  state = "over";
+  const reached = kind === "clear" ? LAST_DAY : day;
+  saveBest(reached); showBest();
+  $("copied").textContent = "";
+  if(kind === "clear"){
+    $("overImg").src = "img/08.png";
+    $("overTitle").textContent = "今年も生き延びた";
+    $("overMsg").textContent = "年は勝手に明ける。おつかれさまでした。";
+    gc("nenmatsu/clear","年末避けゲー クリア");
+  } else if(cause === "shachiku"){
+    $("overImg").src = "img/09.png";
+    $("overTitle").textContent = `12月${day}日、社畜に当たった`;
+    $("overMsg").textContent = "即死。息してる？";
+    gc("nenmatsu/dead-shachiku","年末避けゲー 社畜で即死");
+  } else {
+    $("overImg").src = "img/09.png";
+    $("overTitle").textContent = `12月${day}日、力尽きた`;
+    $("overMsg").textContent = `年明けまで、あと${LAST_DAY - day}日。寝たら回復する。`;
+    gc("nenmatsu/dead-hp","年末避けゲー 力尽きた");
+  }
+  shareText = kind === "clear"
+    ? "【目標、年内生き延びる】12月31日まで生き延びた。年は勝手に明ける。"
+    : `【目標、年内生き延びる】12月${day}日で${cause === "shachiku" ? "社畜に当たって即死" : "力尽きた"}。`;
+  shareText += "\nhttps://unsoya-saki.github.io/dubai/nenmatsu/";
+  setTimeout(() => { $("over").hidden = false; }, 350);
+}
+let shareText = "";
+$("shareBtn").onclick = async () => {
+  try{ await navigator.clipboard.writeText(shareText); $("copied").textContent = "コピーしました。SNSに貼ってね"; }
+  catch(e){ $("copied").textContent = "コピーできませんでした"; }
+};
+$("storeBtn").addEventListener("click", () => gc("nenmatsu/store","年末避けゲー スタンプへ"));
+
+// ---- ループ ----
+function loop(ts){
+  const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0); lastTs = ts;
+  if(state === "play"){ update(dt); }
+  if(state !== "title") draw();
+  requestAnimationFrame(loop);
+}
+document.addEventListener("visibilitychange", () => { lastTs = performance.now(); });
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
