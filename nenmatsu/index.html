@@ -56,6 +56,7 @@
     指でギャル子さんを左右に動かして、12月31日まで生き延びる。<br>
     よける：<span class="chip c-bad">残業</span><span class="chip c-bad">クレーム</span><span class="chip c-bad">全体朝礼</span> ほか<br>
     とる：<span class="chip c-good">糖分</span><span class="chip c-good">睡眠</span><span class="chip c-good">定時</span><span class="chip c-good">推し</span><span class="chip c-good">有給</span> ほか<br>
+    体力満タンで取りすぎると、<b>だらけて動きが遅くなる</b>。<br>
     <span class="chip c-die">社畜</span> に当たったら <b>即死</b>。
   </div>
   <div class="best" id="bestT"></div>
@@ -105,13 +106,19 @@ const BAD = [
   {t:"残業", d:20}, {t:"クレーム", d:25}, {t:"会議", d:15},
   {t:"締め切り", d:20}, {t:"全体朝礼", d:10}, {t:"「ちょっといい？」", d:15}
 ];
-const GOOD = [
-  {t:"糖分", heal:15, wt:6, stamp:"s11"}, {t:"睡眠", heal:20, wt:5, stamp:"s10"},
-  {t:"定時", heal:25, wt:4, stamp:"s15"}, {t:"コーヒー", heal:10, wt:6},
-  {t:"差し入れ", heal:15, wt:5}, {t:"推し", heal:20, wt:4},
-  {t:"週末", heal:25, wt:3}, {t:"給料日", heal:30, wt:2},
-  {t:"ボーナス", heal:40, wt:1, gold:true}, {t:"有給", heal:50, wt:1, inv:2.5, gold:true}
+const GOOD = [ // from=出始める日、w0=12/1の出やすさ、w1=12/31の出やすさ
+  {t:"コーヒー", heal:10, from:1,  w0:6, w1:1},
+  {t:"糖分",     heal:15, from:1,  w0:6, w1:1, stamp:"s11"},
+  {t:"差し入れ", heal:15, from:1,  w0:5, w1:1},
+  {t:"睡眠",     heal:20, from:6,  w0:3, w1:3, stamp:"s10"},
+  {t:"推し",     heal:20, from:6,  w0:3, w1:3},
+  {t:"定時",     heal:25, from:10, w0:2, w1:3, stamp:"s15"},
+  {t:"週末",     heal:25, from:15, w0:1, w1:3},
+  {t:"給料日",   heal:30, from:15, w0:1, w1:3},
+  {t:"ボーナス", heal:40, from:22, w0:1, w1:2, gold:true},
+  {t:"有給",     heal:50, from:22, w0:1, w1:2, inv:2.5, gold:true}
 ];
+function goodWeight(g){ if(day < g.from) return 0; return g.w0 + (g.w1 - g.w0) * (day-1)/30; }
 const DAY_LINES = {
   1:"目標、年内生き延びる", 6:"一日は勝手に終わる", 10:"考え方次第", 14:"心を無に",
   16:"もう半分", 20:"あと半分", 24:"全部、気のせい", 29:"大丈夫、終わりは来る", 31:"帰れるだけ幸せ"
@@ -120,7 +127,7 @@ const HIT_LINES = ["生きてればOK","明日の自分に任せた","心を無�
 
 const DAY_SEC = 2.8, LAST_DAY = 31;
 let state = "title", items = [], pops = [], toast = null, stampToast = null;
-let player, hp, t, day, spawnT, inv, shake, flash, lastTs = 0, cause = "", pointerX = null;
+let lazy = 0, player, hp, t, day, spawnT, inv, shake, flash, lastTs = 0, cause = "", pointerX = null;
 
 function best(){ try{ return +localStorage.getItem("nenmatsu_best") || 0; }catch(e){ return 0; } }
 function saveBest(d){ try{ if(d > best()) localStorage.setItem("nenmatsu_best", d); }catch(e){} }
@@ -131,7 +138,7 @@ function gc(path,title){ try{ if(window.goatcounter && window.goatcounter.count)
 
 function start(){
   player = { x: W/2, w: 0, h: 0 };
-  hp = 100; t = 0; day = 1; spawnT = 0.6; inv = 0; shake = 0; flash = 0;
+  hp = 100; lazy = 0; t = 0; day = 1; spawnT = 0.6; inv = 0; shake = 0; flash = 0;
   items = []; pops = []; stampToast = null; toast = null; pointerX = null;
   state = "play"; $("title").hidden = true; $("over").hidden = true;
   showToast(DAY_LINES[1]); gc("nenmatsu/start","年末避けゲー スタート");
@@ -159,9 +166,9 @@ function spawn(){
   const deathP = day < 4 ? 0 : 0.015 + day * 0.001;
   let it;
   if(r < deathP) it = { kind:"die", t:"社畜" };
-  else if(r < deathP + 0.22){
-    const tot = GOOD.reduce((s,g)=>s+g.wt,0); let x = Math.random()*tot;
-    const g = GOOD.find(g => (x -= g.wt) < 0) || GOOD[0];
+  else if(r < deathP + (0.24 - 0.10 * (day-1)/30)){
+    const tot = GOOD.reduce((s,g)=>s+goodWeight(g),0); let x = Math.random()*tot;
+    const g = GOOD.find(g => (x -= goodWeight(g)) < 0) || GOOD[0];
     it = { kind:"good", ...g };
   } else it = { kind:"bad", ...BAD[Math.floor(Math.random()*BAD.length)] };
   const fs = Math.max(15, Math.min(24, W * 0.05));
@@ -185,8 +192,10 @@ function update(dt){
   // プレイヤー
   const ph = Math.min(H * 0.17, 150), pw = ph * (122/218);
   player.w = pw; player.h = ph;
-  if(pointerX !== null) player.x += (pointerX - player.x) * Math.min(1, dt * 16);
-  if(keyDir) player.x += keyDir * W * 1.1 * dt;
+  lazy = Math.max(0, lazy - dt);
+  const agile = lazy > 0 ? 0.22 : 1;
+  if(pointerX !== null) player.x += (pointerX - player.x) * Math.min(1, dt * 16 * agile);
+  if(keyDir) player.x += keyDir * W * 1.1 * dt * agile;
   player.x = Math.max(pw/2, Math.min(W - pw/2, player.x));
   const py = H - ph - groundH();
   const hb = { l: player.x - pw*0.32, r: player.x + pw*0.32, t: py + ph*0.06, b: py + ph*0.9 };
@@ -199,7 +208,12 @@ function update(dt){
     if(!it.dead && r > hb.l && l < hb.r && bt > hb.t && tp < hb.b){
       it.dead = true;
       if(it.kind === "good"){
+        const over = hp + it.heal - 100;
         hp = Math.min(100, hp + it.heal);
+        if(over > 0 && !it.inv){
+          const was = lazy; lazy = Math.min(5, lazy + over * 0.07);
+          if(was <= 0 && lazy > 0.6) showToast("取りすぎ。だらけた");
+        }
         pops.push({ x: it.x, y: it.y, text: `${it.t} +${it.heal}`, col:"#2fd18b", t: 1 });
         if(it.inv){ inv = it.inv; showToast("有給、最強"); } else if(it.t === "ボーナス") showToast("ボーナス、出た");
         if(it.stamp) stampToast = { img: IMG[it.stamp], t: 1.4 };
@@ -315,8 +329,10 @@ function draw(){
   }
   // ギャル子さん
   const ph = player.h, pw = player.w, py = H - ph - groundH();
+  if(lazy > 0){ cx.save(); cx.textAlign="center"; cx.textBaseline="bottom"; cx.font = `900 14px "M PLUS Rounded 1c", sans-serif`;
+    cx.lineWidth=4; cx.strokeStyle="rgba(0,0,0,.6)"; cx.strokeText("だらけ中…", player.x, py - 4); cx.fillStyle="#c9b8ff"; cx.fillText("だらけ中…", player.x, py - 4); cx.restore(); }
   if(inv > 0){ cx.globalAlpha = 0.55 + 0.45*Math.abs(Math.sin(t*12)); cx.shadowColor="#ffcf3f"; cx.shadowBlur=24; }
-  if(IMG.chara.complete) cx.drawImage(IMG.chara, player.x - pw/2, py, pw, ph);
+  if(IMG.chara.complete){ if(lazy > 0){ cx.save(); cx.translate(player.x, py + ph); cx.rotate(Math.sin(t*2)*0.08); cx.scale(1.08, 0.94); cx.drawImage(IMG.chara, -pw/2, -ph, pw, ph); cx.restore(); } else cx.drawImage(IMG.chara, player.x - pw/2, py, pw, ph); }
   cx.globalAlpha = 1; cx.shadowBlur = 0;
 
   // ポップ
