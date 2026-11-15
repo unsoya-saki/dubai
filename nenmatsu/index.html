@@ -93,7 +93,7 @@ document.body.appendChild(sabProbe);
 let SAB = 0;
 document.body.appendChild(satProbe);
 function measureSat(){ SAT = Math.max(8, satProbe.getBoundingClientRect().height || 0); SAB = sabProbe.getBoundingClientRect().height || 0; }
-function groundH(){ return SAB + Math.max(70, H * 0.13); }
+function groundH(){ return SAB + Math.max(120, H * 0.40); }
 window.addEventListener("resize", () => { resize(); measureSat(); }); resize(); measureSat();
 
 function load(src){ const i = new Image(); i.src = src; return i; }
@@ -148,7 +148,7 @@ window.addEventListener("keyup", e => { if(e.key==="ArrowLeft"||e.key==="ArrowRi
 function showToast(text){ toast = { text, t: 1.8 }; }
 
 // ---- 出現 ----
-function speed(){ return H * (0.30 + (day-1) * 0.014); }
+function speed(){ return (H - groundH()) * (0.42 + (day-1) * 0.02); }
 function interval(){ return Math.max(0.32, 0.85 - (day-1) * 0.017); }
 function spawn(){
   const r = Math.random();
@@ -209,7 +209,7 @@ function update(dt){
       }
     }
   }
-  items = items.filter(it => !it.dead && it.y - it.h < H + 40);
+  items = items.filter(it => !it.dead && it.y - it.h/2 < H - groundH());
   for(const p of pops){ p.t -= dt; p.y -= 40 * dt; }
   pops = pops.filter(p => p.t > 0);
 }
@@ -225,8 +225,7 @@ function draw(){
   if(shake > 0) cx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*6);
 
   // 地面
-  cx.fillStyle = "rgba(255,255,255,.06)"; cx.fillRect(0, H - groundH(), W, groundH());
-  if(t < 6){ cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = `800 13px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = `rgba(255,255,255,${0.6*(1-t/6)})`; cx.fillText("← 画面のどこでも、指を左右に動かす →", W/2, H - groundH()/2 - SAB/2); }
+
 
   // 言葉
   for(const it of items){
@@ -247,6 +246,23 @@ function draw(){
     cx.fillText(it.t, it.x + Math.sin(it.wob) * 2, it.y + 1);
   }
 
+  { // 床：株式会社ギャル子量産センター
+    const gy = H - groundH(), gh = groundH() - SAB;
+    const fg = cx.createLinearGradient(0, gy, 0, H);
+    fg.addColorStop(0, "#2a2f55"); fg.addColorStop(1, "#151935");
+    cx.fillStyle = fg; cx.fillRect(0, gy, W, groundH());
+    cx.fillStyle = "#ffcf3f"; cx.fillRect(0, gy, W, 4);
+    cx.textAlign = "center"; cx.textBaseline = "middle";
+    const fs = Math.min(26, W * 0.062);
+    cx.font = `800 ${fs*0.55}px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.55)";
+    cx.fillText("株式会社", W/2, gy + gh*0.26 - fs*1.0);
+    cx.font = `900 ${fs}px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "#ffcf3f";
+    cx.fillText("ギャル子量産センター", W/2, gy + gh*0.26);
+    cx.font = `800 ${fs*0.5}px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.5)";
+    cx.fillText("本日の定時：未定　／　有給：申請中", W/2, gy + gh*0.26 + fs*0.95);
+    cx.font = `800 ${fs*0.6}px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.35)";
+    cx.fillText("← ここを指で左右になぞる →", W/2, gy + gh*0.72);
+  }
   // ギャル子さん
   const ph = player.h, pw = player.w, py = H - ph - groundH();
   if(inv > 0){ cx.globalAlpha = 0.55 + 0.45*Math.abs(Math.sin(t*12)); cx.shadowColor="#ffcf3f"; cx.shadowBlur=24; }
