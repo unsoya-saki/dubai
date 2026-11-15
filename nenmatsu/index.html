@@ -111,7 +111,7 @@ const GOOD = [
 ];
 const DAY_LINES = {
   1:"目標、年内生き延びる", 6:"一日は勝手に終わる", 10:"考え方次第", 14:"心を無に",
-  16:"もう半分", 20:"あと半分", 24:"全部、気のせい", 28:"大丈夫、終わりは来る", 31:"帰れるだけ幸せ"
+  16:"もう半分", 20:"あと半分", 24:"全部、気のせい", 29:"大丈夫、終わりは来る", 31:"帰れるだけ幸せ"
 };
 const HIT_LINES = ["生きてればOK","明日の自分に任せた","心を無に","全部、気のせい","考え方次第","息してる？"];
 
@@ -148,8 +148,9 @@ window.addEventListener("keyup", e => { if(e.key==="ArrowLeft"||e.key==="ArrowRi
 function showToast(text){ toast = { text, t: 1.8 }; }
 
 // ---- 出現 ----
-function speed(){ return (H - groundH()) * (0.42 + (day-1) * 0.02); }
-function interval(){ return Math.max(0.32, 0.85 - (day-1) * 0.017); }
+function hard(){ return 1 + 0.35 * nightness(progress()); }
+function speed(){ return (H - groundH()) * (0.42 + (day-1) * 0.02) * hard(); }
+function interval(){ return Math.max(0.24, (0.85 - (day-1) * 0.017) / hard()); }
 function spawn(){
   const r = Math.random();
   const deathP = day < 4 ? 0 : 0.015 + day * 0.001;
@@ -175,7 +176,7 @@ function update(dt){
   if(toast && (toast.t -= dt) <= 0) toast = null;
   if(stampToast && (stampToast.t -= dt) <= 0) stampToast = null;
   const nd = Math.min(LAST_DAY, 1 + Math.floor(t / DAY_SEC));
-  if(nd !== day){ day = nd; if(DAY_LINES[day]) showToast(DAY_LINES[day]); }
+  if(nd !== day){ day = nd; if(day === 26) showToast("日が落ちた。ここからが本番"); else if(DAY_LINES[day]) showToast(DAY_LINES[day]); }
   if(t >= DAY_SEC * LAST_DAY){ return end("clear"); }
 
   // プレイヤー
@@ -214,13 +215,59 @@ function update(dt){
   pops = pops.filter(p => p.t > 0);
 }
 
+
+// ---- 空：朝日 → 昼 → 夕方 → 夜（夜が一番きつい）----
+const SKY = [ // [進み具合, 上の色, 下の色]
+  [0.00, [26,32,74],   [255,150,110]],
+  [0.18, [70,140,230], [255,214,170]],
+  [0.45, [52,140,235], [170,215,255]],
+  [0.68, [70,80,170],  [255,170,90]],
+  [0.80, [40,30,90],   [255,90,70]],
+  [0.90, [12,14,40],   [50,30,80]],
+  [1.00, [5,6,20],     [20,20,50]]
+];
+const STARS = Array.from({length:60}, () => [Math.random(), Math.random()*0.7, Math.random()*1.5+0.5, Math.random()*6.28]);
+const CITY = (() => { const a=[]; let x=0; while(x<1){ const w=0.04+Math.random()*0.07; a.push([x,w,0.35+Math.random()*0.65, Math.random()]); x+=w; } return a; })();
+function progress(){ return Math.min(1, t / (DAY_SEC * LAST_DAY)); }
+function mix(a,b,f){ return a.map((v,i)=>Math.round(v+(b[i]-v)*f)); }
+function skyAt(k){ for(let i=1;i<SKY.length;i++){ if(k<=SKY[i][0]){ const f=(k-SKY[i-1][0])/(SKY[i][0]-SKY[i-1][0]); return [mix(SKY[i-1][1],SKY[i][1],f), mix(SKY[i-1][2],SKY[i][2],f)]; } } return [SKY[SKY.length-1][1],SKY[SKY.length-1][2]]; }
+function nightness(k){ return Math.max(0, Math.min(1, (k-0.78)/0.14)); }
+function drawSky(){
+  const k = state === "play" || state === "over" ? progress() : 0;
+  const gy = H - groundH();
+  const [top, bot] = skyAt(k);
+  const g = cx.createLinearGradient(0,0,0,gy);
+  g.addColorStop(0, `rgb(${top})`); g.addColorStop(1, `rgb(${bot})`);
+  cx.fillStyle = g; cx.fillRect(0,0,W,gy);
+  const n = nightness(k);
+  // 星
+  if(n > 0){ for(const s of STARS){ cx.globalAlpha = n * (0.5 + 0.5*Math.sin(t*2 + s[3])); cx.fillStyle="#fff"; cx.beginPath(); cx.arc(s[0]*W, s[1]*gy, s[2], 0, 6.28); cx.fill(); } cx.globalAlpha = 1; }
+  // 太陽（左下から昇って、右下に沈む）
+  const sk = Math.min(1, k / 0.86);
+  if(sk < 1){
+    const sx = W*0.08 + W*0.84*sk, sy = gy*0.95 - Math.sin(sk*Math.PI) * gy*0.72, r = Math.min(W,gy)*0.07;
+    const warm = Math.abs(sk-0.5)*2;
+    cx.shadowColor = `rgba(255,${200-warm*80},${120-warm*80},.9)`; cx.shadowBlur = r*1.6;
+    cx.fillStyle = `rgb(255,${235-warm*90},${150-warm*110})`; cx.beginPath(); cx.arc(sx, sy, r, 0, 6.28); cx.fill(); cx.shadowBlur = 0;
+  }
+  // 月
+  if(n > 0){ const r = Math.min(W,gy)*0.05; cx.globalAlpha = n; cx.fillStyle="#fff6c8"; cx.beginPath(); cx.arc(W*0.8, gy*0.2, r, 0, 6.28); cx.fill();
+    cx.fillStyle = `rgb(${skyAt(k)[0]})`; cx.beginPath(); cx.arc(W*0.8 + r*0.45, gy*0.2 - r*0.2, r*0.9, 0, 6.28); cx.fill(); cx.globalAlpha = 1; }
+  // ビルの影（夜は窓が光る）
+  const bh = gy * 0.16;
+  for(const b of CITY){
+    const x = b[0]*W, w = b[1]*W, h = bh*b[2];
+    cx.fillStyle = `rgba(${mix([60,70,110],[10,12,30],Math.max(n,(k>0.7?0.5:0)))},${0.55+n*0.3})`;
+    cx.fillRect(x, gy-h, w-2, h);
+    if(n > 0.2){ cx.fillStyle = `rgba(255,220,120,${0.7*n})`;
+      for(let wy=gy-h+6; wy<gy-6; wy+=10) for(let wx=x+4; wx<x+w-6; wx+=8) if(((wx*7+wy*13+b[3]*100)|0)%3===0) cx.fillRect(wx, wy, 3, 4); }
+  }
+}
+
 // ---- 描画 ----
 function rr(x,y,w,h,r){ cx.beginPath(); cx.moveTo(x+r,y); cx.arcTo(x+w,y,x+w,y+h,r); cx.arcTo(x+w,y+h,x,y+h,r); cx.arcTo(x,y+h,x,y,r); cx.arcTo(x,y,x+w,y,r); cx.closePath(); }
 function draw(){
-  const g = cx.createLinearGradient(0,0,0,H);
-  const k = (day-1)/30;
-  g.addColorStop(0, `hsl(${230 - k*20},45%,${22 - k*8}%)`); g.addColorStop(1, `hsl(${250 - k*30},40%,${12 - k*4}%)`);
-  cx.fillStyle = g; cx.fillRect(0,0,W,H);
+  drawSky();
   cx.save();
   if(shake > 0) cx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*6);
 
@@ -283,7 +330,7 @@ function draw(){
   const top = SAT + 10;
   cx.textAlign = "left"; cx.textBaseline = "top";
   cx.font = `900 ${Math.min(34, W*0.08)}px "M PLUS Rounded 1c", sans-serif`;
-  cx.fillStyle = "#ffcf3f"; cx.fillText(`12月${day}日`, 16, top + 18);
+  cx.lineWidth = 5; cx.strokeStyle = "rgba(0,0,0,.45)"; cx.strokeText(`12月${day}日`, 16, top + 18); cx.fillStyle = "#ffcf3f"; cx.fillText(`12月${day}日`, 16, top + 18);
   cx.font = `800 13px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = "rgba(255,255,255,.8)";
   cx.fillText(day >= LAST_DAY ? "大晦日。あと少し" : `年明けまで あと${LAST_DAY - day}日`, 16, top + 18 + Math.min(34, W*0.08) + 6);
   // 体力バー
