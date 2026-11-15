@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="紗旗の天気">
+<title>紗旗の天気</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0e13; --card:#141922; --line:#232a36; --text:#e9edf3; --sub:#8b95a7;
+    --gold:#c9a45c; --rain:#3b82f6; --rain-weak:#1e3a66; --maybe:#a78bfa; --ok:#34d399; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans JP",sans-serif;-webkit-text-size-adjust:100%}
+  body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 28px)}
+  .wrap{max-width:640px;margin:0 auto}
+  header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+  h1{font-family:Oswald,"Noto Sans JP",sans-serif;font-size:26px;letter-spacing:.06em;margin:0;line-height:1}
+  h1 small{display:block;font-family:"Noto Sans JP";font-size:11px;color:var(--gold);letter-spacing:.2em;margin-bottom:6px}
+  .upd{font-size:11px;color:var(--sub);text-align:right}
+  button.reload{background:none;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 12px;font-size:12px;margin-top:6px;font-family:inherit}
+  section{margin-top:18px}
+  h2{font-size:13px;color:var(--gold);letter-spacing:.15em;margin:0 0 10px;font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .alert{border-left:4px solid var(--ok)}
+  .alert.rain{border-left-color:var(--rain)}
+  .alert .big{font-size:18px;font-weight:900;line-height:1.4}
+  .alert ul{margin:10px 0 0;padding:0;list-style:none}
+  .alert li{padding:8px 0;border-top:1px solid var(--line);font-size:14px;display:flex;justify-content:space-between;gap:8px}
+  .alert li b{white-space:nowrap}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap;align-self:center}
+  .tag.sure{background:var(--rain);color:#fff}
+  .tag.maybe{background:transparent;border:1px solid var(--maybe);color:var(--maybe)}
+  .place{margin-bottom:10px}
+  .ph{display:flex;align-items:center;justify-content:space-between}
+  .pname{font-size:17px;font-weight:900}
+  .pnow{display:flex;align-items:center;gap:8px}
+  .temp{font-family:Oswald;font-size:28px;font-weight:700}
+  .emoji{font-size:24px}
+  .pmeta{font-size:12px;color:var(--sub);margin-top:4px}
+  .strip{display:flex;gap:2px;margin-top:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .strip::-webkit-scrollbar{display:none}
+  .h{flex:0 0 26px;text-align:center}
+  .h .bar{height:34px;border-radius:4px;background:#1a202b;position:relative;overflow:hidden}
+  .h .bar i{position:absolute;left:0;right:0;bottom:0;background:var(--rain)}
+  .h.maybe .bar i{background:repeating-linear-gradient(135deg,var(--maybe) 0 3px,transparent 3px 6px)}
+  .h .t{font-size:10px;color:var(--sub);margin-top:3px}
+  .h .p{font-size:9px;color:var(--sub)}
+  .h.now .t{color:var(--gold);font-weight:700}
+  .legend{font-size:11px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .legend .l1::before{background:var(--rain)}
+  .legend .l2::before{background:repeating-linear-gradient(135deg,var(--maybe) 0 2px,transparent 2px 4px);border:1px solid var(--maybe)}
+  #map{height:340px;border-radius:14px;border:1px solid var(--line);background:#0f131a}
+  .leaflet-tile-pane .osm{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.4)}
+  .mk{background:var(--gold);color:#111;font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;white-space:nowrap;box-shadow:0 1px 4px #0008}
+  .radarbar{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--sub)}
+  .radarbar button{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 12px;font-family:inherit}
+  .radarbar input{flex:1}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:8px 4px;border-top:1px solid var(--line);text-align:left}
+  th{font-size:11px;color:var(--sub);font-weight:400;border-top:none}
+  td.num{text-align:right;font-family:Oswald;font-size:16px}
+  .note{font-size:11px;color:var(--sub);line-height:1.7;margin-top:8px}
+  .err{color:var(--warn);font-size:13px}
+  a{color:var(--gold)}
+  .skeleton{color:var(--sub);font-size:13px}
+  footer{margin-top:26px;font-size:10px;color:var(--sub);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small>SAKI WEATHER</small>紗旗の天気</h1>
+    <div class="upd"><div id="updated">読み込み中…</div><button class="reload" id="reload">更新</button></div>
+  </header>
+
+  <section>
+    <h2>この先24時間の雨</h2>
+    <div id="alert" class="card alert"><div class="skeleton">予報を取ってきています…</div></div>
+  </section>
+
+  <section>
+    <h2>7か所の天気</h2>
+    <div id="places"><div class="card skeleton">読み込み中…</div></div>
+    <div class="legend"><span class="l1">3つの予報が全部「雨」</span><span class="l2">意見が割れている（怪しい）</span></div>
+    <div class="note">バーの高さは雨の強さ、下の数字は降水確率です。3つの予報＝気象庁・アメリカ（GFS）・ドイツ（ICON）。</div>
+  </section>
+
+  <section>
+    <h2>雨雲レーダー（直近の動き）</h2>
+    <div id="map"></div>
+    <div class="radarbar">
+      <button id="play">▶︎</button>
+      <input type="range" id="slider" min="0" max="0" value="0">
+      <span id="rtime">--:--</span>
+    </div>
+    <div class="note">もっと細かく見たいときは <a href="https://www.jma.go.jp/bosai/nowc/" target="_blank" rel="noopener">気象庁「雨雲の動き」</a>（無料）。</div>
+  </section>
+
+  <section>
+    <h2>予報の答え合わせ（過去7日）</h2>
+    <div id="score" class="card"><div class="skeleton">計算中…</div></div>
+    <div class="note">前日に出ていた予報で「雨の日（1mm以上）」と言っていたかと、実際に雨の日だったかを日ごとに比べています。「実際」は観測データを取り込んだ解析値で、アメダスの実測そのものではありません。</div>
+  </section>
+
+  <footer>
+    天気データ：<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>（気象庁・NOAA・DWD のデータを使用, CC BY 4.0）／ 雨雲レーダー：<a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> ／ 地図：© OpenStreetMap contributors
+  </footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const PLACES = [
+  {name:"八王子",   lat:35.6558, lon:139.3389},
+  {name:"日野",     lat:35.6713, lon:139.3950},
+  {name:"府中",     lat:35.6689, lon:139.4776},
+  {name:"小金井",   lat:35.6995, lon:139.5030},
+  {name:"阿佐ヶ谷", lat:35.7048, lon:139.6357},
+  {name:"新宿",     lat:35.6909, lon:139.7003},
+  {name:"歌舞伎町", lat:35.6950, lon:139.7030},
+];
+const MODELS = [
+  {id:"jma_seamless",  label:"気象庁"},
+  {id:"gfs_seamless",  label:"アメリカ"},
+  {id:"icon_seamless", label:"ドイツ"},
+];
+const RAIN_MM = 0.3;      // 1時間でこれ以上なら「雨」
+const DAY_RAIN_MM = 1.0;  // 1日でこれ以上なら「雨の日」
+
+const WMO = {
+  0:["☀️","快晴"],1:["🌤️","晴れ"],2:["⛅","晴れ時々くもり"],3:["☁️","くもり"],
+  45:["🌫️","霧"],48:["🌫️","霧"],
+  51:["🌦️","霧雨"],53:["🌦️","霧雨"],55:["🌧️","霧雨"],56:["🌧️","着氷性の霧雨"],57:["🌧️","着氷性の霧雨"],
+  61:["🌧️","小雨"],63:["🌧️","雨"],65:["🌧️","強い雨"],66:["🌧️","着氷性の雨"],67:["🌧️","着氷性の雨"],
+  71:["🌨️","小雪"],73:["🌨️","雪"],75:["❄️","大雪"],77:["🌨️","霧雪"],
+  80:["🌦️","にわか雨"],81:["🌧️","にわか雨"],82:["⛈️","激しいにわか雨"],
+  85:["🌨️","にわか雪"],86:["❄️","にわか雪"],95:["⛈️","雷雨"],96:["⛈️","雷雨"],99:["⛈️","激しい雷雨"]
+};
+
+const lats = PLACES.map(p=>p.lat).join(","), lons = PLACES.map(p=>p.lon).join(",");
+const TZ = "Asia%2FTokyo";
+const URL_MAIN = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code,precipitation&hourly=temperature_2m,precipitation_probability,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=${TZ}&forecast_days=2`;
+const URL_MODELS = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&hourly=precipitation&models=${MODELS.map(m=>m.id).join(",")}&timezone=${TZ}&forecast_days=2`;
+const URL_PREV = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&hourly=precipitation,precipitation_previous_day1&past_days=7&forecast_days=1&timezone=${TZ}`;
+
+const $ = id => document.getElementById(id);
+const arr = x => Array.isArray(x) ? x : [x];
+async function getJSON(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  const j = await r.json();
+  if(j && j.error) throw new Error(j.reason || "error");
+  return j;
+}
+const pad = n => String(n).padStart(2,"0");
+function nowKeyJST(){
+  // 端末の時計を日本時間に直して "YYYY-MM-DDTHH:00" にする
+  const d = new Date(Date.now() + 9*3600e3);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:00`;
+}
+const hourOf = t => parseInt(t.slice(11,13),10);
+
+// その時間の「3つの予報」の意見をまとめる
+function consensus(modelsHourly, i){
+  let n=0,k=0,sum=0;
+  for(const m of MODELS){
+    const v = modelsHourly[`precipitation_${m.id}`]?.[i];
+    if(v==null) continue;
+    n++; sum+=v; if(v>=RAIN_MM) k++;
+  }
+  const level = n===0 ? "none" : k===0 ? "none" : k===n ? "sure" : "maybe";
+  return {n,k,level,avg: n? sum/n : 0};
+}
+
+// 連続する雨の時間をまとめる（例：14時〜17時）
+function rainRanges(times, cons, start, end){
+  const out=[]; let cur=null;
+  for(let i=start;i<end;i++){
+    const c = cons[i];
+    if(c.level!=="none"){
+      if(!cur) cur={from:i,to:i,sure:c.level==="sure",kmax:c.k,n:c.n};
+      else { cur.to=i; cur.sure = cur.sure || c.level==="sure"; cur.kmax=Math.max(cur.kmax,c.k); }
+    } else if(cur){ out.push(cur); cur=null; }
+  }
+  if(cur) out.push(cur);
+  return out.map(r=>({...r, label: rangeLabel(times[r.from], times[r.to])}));
+}
+function rangeLabel(a,b){
+  const today = nowKeyJST().slice(0,10);
+  const day = t => t.slice(0,10)===today ? "" : "明日";
+  const ha = hourOf(a), hb = (hourOf(b)+1)%24;
+  return `${day(a)}${ha}時〜${day(a)!==day(b)?day(b):""}${hb}時`;
+}
+
+function renderAll(main, models){
+  main = arr(main); models = arr(models);
+  const nowKey = nowKeyJST();
+  const alerts = [];
+  const html = PLACES.map((p,pi)=>{
+    const M = main[pi], H = M.hourly, MH = models[pi].hourly;
+    let start = H.time.indexOf(nowKey); if(start<0) start=0;
+    const end = Math.min(start+24, H.time.length);
+    const cons = MH.time.map((_,i)=>consensus(MH,i));
+    // models の時間軸は main と同じ前提だが、念のため時刻で合わせる
+    const consByTime = {}; MH.time.forEach((t,i)=>consByTime[t]=cons[i]);
+    const consAligned = H.time.map(t=>consByTime[t] || {n:0,k:0,level:"none",avg:0});
+    rainRanges(H.time, consAligned, start, end).forEach(r=>alerts.push({place:p.name, ...r}));
+
+    const cur = M.current || {};
+    const [emo, txt] = WMO[cur.weather_code] || ["・",""];
+    const maxP = M.daily?.precipitation_probability_max?.[0];
+    const hi = M.daily?.temperature_2m_max?.[0], lo = M.daily?.temperature_2m_min?.[0];
+
+    let strip = "";
+    for(let i=start;i<end;i++){
+      const c = consAligned[i];
+      const mm = Math.max(c.avg, H.precipitation?.[i] ?? 0);
+      const h = c.level==="none" ? 0 : Math.max(18, Math.min(100, mm/5*100));
+      const prob = H.precipitation_probability?.[i];
+      strip += `<div class="h ${c.level==='maybe'?'maybe':''} ${i===start?'now':''}" title="${c.k}/${c.n}">
+        <div class="bar"><i style="height:${h}%"></i></div>
+        <div class="t">${hourOf(H.time[i])}</div>
+        <div class="p">${prob==null?'':prob+'%'}</div></div>`;
+    }
+    return `<div class="card place">
+      <div class="ph"><div class="pname">${p.name}</div>
+        <div class="pnow"><span class="emoji">${emo}</span><span class="temp">${cur.temperature_2m!=null?Math.round(cur.temperature_2m):'--'}°</span></div></div>
+      <div class="pmeta">${txt}　今日 ${hi!=null?Math.round(hi):'--'}° / ${lo!=null?Math.round(lo):'--'}°　降水確率 最大 ${maxP??'--'}%</div>
+      <div class="strip">${strip}</div></div>`;
+  }).join("");
+  $("places").innerHTML = html;
+
+  const box = $("alert");
+  if(alerts.length===0){
+    box.className="card alert";
+    box.innerHTML = `<div class="big">7か所とも、雨の予報なし</div><div class="pmeta">3つの予報が全部「降らない」と言っています。</div>`;
+  } else {
+    const sure = alerts.filter(a=>a.sure);
+    box.className="card alert rain";
+    const head = sure.length ? `☔ 雨の予報あり（${[...new Set(sure.map(a=>a.place))].length}か所）` : `☁️ 降るかもしれない（予報が割れている）`;
+    box.innerHTML = `<div class="big">${head}</div><ul>${alerts.map(a=>
+      `<li><span><b>${a.place}</b>　${a.label}</span><span class="tag ${a.sure?'sure':'maybe'}">${a.sure?'3つとも雨':`${a.n}つ中${a.kmax}つが雨`}</span></li>`).join("")}</ul>`;
+  }
+}
+
+function renderScore(prev){
+  prev = arr(prev);
+  const today = nowKeyJST().slice(0,10);
+  let totalHit=0,totalN=0;
+  const rows = PLACES.map((p,pi)=>{
+    const H = prev[pi].hourly, days = {};
+    H.time.forEach((t,i)=>{
+      const d=t.slice(0,10); if(d>=today) return;
+      const a=H.precipitation?.[i], f=H.precipitation_previous_day1?.[i];
+      if(a==null||f==null) return;
+      (days[d] ||= {a:0,f:0,n:0}); days[d].a+=a; days[d].f+=f; days[d].n++;
+    });
+    let hit=0,n=0,miss=[];
+    Object.entries(days).sort().forEach(([d,v])=>{
+      if(v.n<20) return; // データが欠けている日は数えない
+      const ar=v.a>=DAY_RAIN_MM, fr=v.f>=DAY_RAIN_MM; n++;
+      if(ar===fr) hit++; else miss.push(`${+d.slice(5,7)}/${+d.slice(8,10)}${ar?'(降った)':'(降らず)'}`);
+    });
+    totalHit+=hit; totalN+=n;
+    const pct = n? Math.round(hit/n*100) : null;
+    return `<tr><td>${p.name}</td><td class="num">${pct==null?'--':pct+'%'}</td><td style="font-size:11px;color:var(--sub)">${n?`${n}日中${hit}日`:'データなし'}${miss.length?'<br>外れ：'+miss.join(' '):''}</td></tr>`;
+  }).join("");
+  const all = totalN? Math.round(totalHit/totalN*100) : null;
+  $("score").innerHTML = `<div class="pmeta" style="margin:0 0 6px">7か所まとめて</div>
+    <div class="temp" style="font-size:36px">${all==null?'--':all+'%'}</div>
+    <table><tr><th>場所</th><th style="text-align:right">的中率</th><th>内訳</th></tr>${rows}</table>`;
+}
+
+// ---- 雨雲レーダー ----
+let map, frames=[], layers=[], idx=0, timer=null, rvHost="";
+function initMap(){
+  map = L.map("map",{zoomControl:false, attributionControl:false}).setView([35.685,139.53],10);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:14, className:"osm"}).addTo(map);
+  PLACES.filter(p=>p.name!=="歌舞伎町").forEach(p=>{
+    L.marker([p.lat,p.lon],{icon:L.divIcon({className:"",html:`<div class="mk">${p.name}</div>`,iconSize:null})}).addTo(map);
+  });
+}
+async function loadRadar(){
+  try{
+    const j = await getJSON("https://api.rainviewer.com/public/weather-maps.json");
+    rvHost = j.host;
+    frames = [...(j.radar?.past||[]), ...(j.radar?.nowcast||[])];
+    layers.forEach(l=>map.removeLayer(l)); layers=[];
+    frames.forEach(f=>{
+      const l = L.tileLayer(`${rvHost}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:0, maxNativeZoom:7, maxZoom:14, zIndex:5});
+      l.addTo(map); layers.push(l);
+    });
+    const pastLen = (j.radar?.past||[]).length;
+    $("slider").max = Math.max(0,frames.length-1);
+    show(pastLen-1);
+  }catch(e){
+    $("rtime").textContent = "レーダーを取得できませんでした";
+  }
+}
+function show(i){
+  if(!frames.length) return;
+  idx = (i+frames.length)%frames.length;
+  layers.forEach((l,k)=>l.setOpacity(k===idx?0.75:0));
+  const d = new Date(frames[idx].time*1000);
+  const jst = new Date(d.getTime()+9*3600e3);
+  const isFuture = frames[idx].time*1000 > Date.now();
+  $("rtime").textContent = `${pad(jst.getUTCHours())}:${pad(jst.getUTCMinutes())}${isFuture?'（予測）':''}`;
+  $("slider").value = idx;
+}
+$("slider").addEventListener("input",e=>{stop();show(+e.target.value)});
+$("play").addEventListener("click",()=>{ timer? stop() : (timer=setInterval(()=>show(idx+1),700), $("play").textContent="❚❚"); });
+function stop(){ clearInterval(timer); timer=null; $("play").textContent="▶︎"; }
+
+// ---- 全体 ----
+async function loadAll(){
+  $("updated").textContent = "更新中…";
+  const [m, md, pv] = await Promise.allSettled([getJSON(URL_MAIN), getJSON(URL_MODELS), getJSON(URL_PREV)]);
+  if(m.status==="fulfilled" && md.status==="fulfilled"){
+    try{ renderAll(m.value, md.value); }
+    catch(e){ $("places").innerHTML = `<div class="card err">表示でエラー：${e.message}</div>`; }
+  } else {
+    const msg = (m.reason||md.reason)?.message || "";
+    $("alert").innerHTML = `<div class="err">予報を取得できませんでした（${msg}）。電波を確認して「更新」を押してください。</div>`;
+    $("places").innerHTML = "";
+  }
+  if(pv.status==="fulfilled"){ try{ renderScore(pv.value); }catch(e){ $("score").innerHTML=`<div class="err">答え合わせでエラー：${e.message}</div>`; } }
+  else $("score").innerHTML = `<div class="err">答え合わせのデータを取得できませんでした</div>`;
+  const d = new Date(Date.now()+9*3600e3);
+  $("updated").textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} 更新`;
+  loadRadar();
+}
+$("reload").addEventListener("click",loadAll);
+try{ initMap(); }catch(e){ $("map").innerHTML='<div class="err" style="padding:14px">地図を読み込めませんでした</div>'; }
+loadAll();
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") loadAll(); });
+</script>
+</body>
+</html>
