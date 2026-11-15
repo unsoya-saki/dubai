@@ -151,8 +151,12 @@ const URL_PREV = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=
 
 const $ = id => document.getElementById(id);
 const arr = x => Array.isArray(x) ? x : [x];
-async function getJSON(url){
-  const r = await fetch(url);
+async function getJSON(url, ms=20000){
+  const ctl = new AbortController(); const tm = setTimeout(()=>ctl.abort(), ms);
+  let r;
+  try{ r = await fetch(url,{signal:ctl.signal}); }
+  catch(e){ throw new Error(e.name==="AbortError" ? "時間切れ" : "通信エラー"); }
+  finally{ clearTimeout(tm); }
   if(!r.ok) throw new Error(`HTTP ${r.status}`);
   const j = await r.json();
   if(j && j.error) throw new Error(j.reason || "error");
@@ -320,7 +324,10 @@ function stop(){ clearInterval(timer); timer=null; $("play").textContent="▶︎
 // ---- 全体 ----
 async function loadAll(){
   $("updated").textContent = "更新中…";
-  const [m, md, pv] = await Promise.allSettled([getJSON(URL_MAIN), getJSON(URL_MODELS), getJSON(URL_PREV)]);
+  const pvP = getJSON(URL_PREV, 30000).then(v=>({status:"fulfilled",value:v}),e=>({status:"rejected",reason:e}));
+  const [m, md] = await Promise.allSettled([getJSON(URL_MAIN), getJSON(URL_MODELS)]);
+  const d0 = new Date(Date.now()+9*3600e3);
+  $("updated").textContent = `${pad(d0.getUTCHours())}:${pad(d0.getUTCMinutes())} 更新`;
   if(m.status==="fulfilled" && md.status==="fulfilled"){
     try{ renderAll(m.value, md.value); }
     catch(e){ $("places").innerHTML = `<div class="card err">表示でエラー：${e.message}</div>`; }
@@ -329,11 +336,10 @@ async function loadAll(){
     $("alert").innerHTML = `<div class="err">予報を取得できませんでした（${msg}）。電波を確認して「更新」を押してください。</div>`;
     $("places").innerHTML = "";
   }
-  if(pv.status==="fulfilled"){ try{ renderScore(pv.value); }catch(e){ $("score").innerHTML=`<div class="err">答え合わせでエラー：${e.message}</div>`; } }
-  else $("score").innerHTML = `<div class="err">答え合わせのデータを取得できませんでした</div>`;
-  const d = new Date(Date.now()+9*3600e3);
-  $("updated").textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} 更新`;
   loadRadar();
+  const pv = await pvP;
+  if(pv.status==="fulfilled"){ try{ renderScore(pv.value); }catch(e){ $("score").innerHTML=`<div class="err">答え合わせでエラー：${e.message}</div>`; } }
+  else $("score").innerHTML = `<div class="err">答え合わせのデータを取得できませんでした（${pv.reason?.message||""}）</div>`;
 }
 $("reload").addEventListener("click",loadAll);
 try{ initMap(); }catch(e){ $("map").innerHTML='<div class="err" style="padding:14px">地図を読み込めませんでした</div>'; }
