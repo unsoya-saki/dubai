@@ -87,8 +87,13 @@ function resize(){
 let SAT = 0;
 const satProbe = document.createElement("div");
 satProbe.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top);visibility:hidden";
+const sabProbe = document.createElement("div");
+sabProbe.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-bottom);visibility:hidden";
+document.body.appendChild(sabProbe);
+let SAB = 0;
 document.body.appendChild(satProbe);
-function measureSat(){ SAT = Math.max(8, satProbe.getBoundingClientRect().height || 0); }
+function measureSat(){ SAT = Math.max(8, satProbe.getBoundingClientRect().height || 0); SAB = sabProbe.getBoundingClientRect().height || 0; }
+function groundH(){ return SAB + Math.max(70, H * 0.13); }
 window.addEventListener("resize", () => { resize(); measureSat(); }); resize(); measureSat();
 
 function load(src){ const i = new Image(); i.src = src; return i; }
@@ -179,7 +184,7 @@ function update(dt){
   if(pointerX !== null) player.x += (pointerX - player.x) * Math.min(1, dt * 16);
   if(keyDir) player.x += keyDir * W * 1.1 * dt;
   player.x = Math.max(pw/2, Math.min(W - pw/2, player.x));
-  const py = H - ph - Math.max(18, H*0.03);
+  const py = H - ph - groundH();
   const hb = { l: player.x - pw*0.32, r: player.x + pw*0.32, t: py + ph*0.06, b: py + ph*0.9 };
 
   spawnT -= dt; if(spawnT <= 0){ spawn(); spawnT = interval() * (0.7 + Math.random()*0.6); }
@@ -220,7 +225,8 @@ function draw(){
   if(shake > 0) cx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*6);
 
   // 地面
-  cx.fillStyle = "rgba(255,255,255,.06)"; cx.fillRect(0, H - Math.max(18,H*0.03), W, Math.max(18,H*0.03));
+  cx.fillStyle = "rgba(255,255,255,.06)"; cx.fillRect(0, H - groundH(), W, groundH());
+  if(t < 6){ cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = `800 13px "M PLUS Rounded 1c", sans-serif`; cx.fillStyle = `rgba(255,255,255,${0.6*(1-t/6)})`; cx.fillText("← 画面のどこでも、指を左右に動かす →", W/2, H - groundH()/2 - SAB/2); }
 
   // 言葉
   for(const it of items){
@@ -242,7 +248,7 @@ function draw(){
   }
 
   // ギャル子さん
-  const ph = player.h, pw = player.w, py = H - ph - Math.max(18, H*0.03);
+  const ph = player.h, pw = player.w, py = H - ph - groundH();
   if(inv > 0){ cx.globalAlpha = 0.55 + 0.45*Math.abs(Math.sin(t*12)); cx.shadowColor="#ffcf3f"; cx.shadowBlur=24; }
   if(IMG.chara.complete) cx.drawImage(IMG.chara, player.x - pw/2, py, pw, ph);
   cx.globalAlpha = 1; cx.shadowBlur = 0;
